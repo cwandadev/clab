@@ -1,17 +1,44 @@
 import { Link } from "@tanstack/react-router";
 import { ShoppingCart, User, Heart } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
 import { CURRENCIES } from "@/lib/currency";
 import { Logo } from "./Logo";
+import { supabase } from "@/integrations/supabase/client";
+
+const BANNER_KEY = "clab.banner.kigali.dismissed";
 
 export function Header() {
   const { cartCount, wishlistCount, currency, setCurrency } = useStore();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [bannerVisible, setBannerVisible] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsLoggedIn(!!user);
+    };
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        setIsLoggedIn(event === "SIGNED_IN" || event === "USER_UPDATED");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem(BANNER_KEY);
+    setBannerVisible(!dismissed);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <nav className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-4 sm:gap-8">
-          <Link to="/" className="flex items-center gap-2 shrink-0">
+          <Link to="/" className="flex items-center gap-2 shrink-0" data-no-translate>
             <Logo className="size-8" />
             <div className="flex flex-col leading-none">
               <span className="font-mono text-sm font-bold tracking-tight">Clab</span>
@@ -39,7 +66,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <div className="hidden sm:flex items-center gap-1 rounded-md bg-secondary p-0.5 ring-1 ring-black/5">
+          <div className="hidden sm:flex items-center gap-1 rounded-md bg-secondary p-0.5 ring-1 ring-black/5" data-no-translate>
             {CURRENCIES.map((c) => (
               <button
                 key={c}
@@ -59,6 +86,7 @@ export function Header() {
             value={currency}
             onChange={(e) => setCurrency(e.target.value as never)}
             className="sm:hidden rounded-md bg-secondary px-2 py-1 font-mono text-[10px] ring-1 ring-black/5"
+            data-no-translate
           >
             {CURRENCIES.map((c) => (
               <option key={c} value={c}>
@@ -78,29 +106,50 @@ export function Header() {
               </span>
             )}
           </Link>
-          <Link
-            to="/auth"
-            className="hidden sm:inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
-            aria-label="Account"
-          >
-            <User className="size-4" />
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              to="/account"
+              className="hidden sm:inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+              aria-label="Account"
+            >
+              <User className="size-4" />
+            </Link>
+          ) : (
+            <Link
+              to="/auth"
+              search={{ redirect: "/", code: undefined, error: undefined, error_description: undefined as any }}
+              className="hidden sm:inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+              aria-label="Sign in"
+            >
+              <User className="size-4" />
+            </Link>
+          )}
           <Link
             to="/cart"
             className="flex items-center gap-2 rounded-md bg-foreground py-2 pl-2 pr-3 text-sm font-medium text-background ring-1 ring-foreground"
+            data-no-translate
           >
             <ShoppingCart className="size-4 shrink-0" />
-            <span className="font-mono text-xs">
+            <span className="font-mono text-xs" data-no-translate>
               [{String(cartCount).padStart(2, "0")}]
             </span>
           </Link>
         </div>
       </nav>
-      <div className="bg-foreground py-1.5 text-background">
-        <p className="text-center font-mono text-[10px] uppercase tracking-widest">
-          Kigali Delivery: Free on all orders exceeding $10 USD
-        </p>
-      </div>
+      {bannerVisible && (
+        <div className="bg-foreground py-1.5 text-background relative group">
+          <p className="text-center font-mono text-[10px] uppercase tracking-widest">
+            Kigali Delivery: Free on all orders exceeding $10 USD
+          </p>
+          <button
+            onClick={() => { localStorage.setItem(BANNER_KEY, "1"); setBannerVisible(false); }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-background/70 hover:text-background"
+            aria-label="Dismiss banner"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </header>
   );
 }

@@ -1,1 +1,24 @@
-project_id = "xpozryohwtyrkqifandp"
+project_id = "oqcjznvmkgilptqpicft"
+
+[auth]
+enabled = true
+external_google_enabled = true
+external_phone_enabled = true
+external_phone_otp_length = 6
+external_phone_otp_expiry = 300
+
+[auth.external.google]
+enabled = true
+client_id = "your-actual-google-client-id"
+client_secret = "your-actual-google-client-secret"
+redirect_uri = "http://localhost:3000/auth"
+skip_verification = false
+
+[auth.sms]
+enabled = true
+provider = "twilio"
+twilio_account_sid = "your-twilio-account-sid"
+twilio_auth_token = "your-twilio-auth-token"
+twilio_message_service_sid = "your-twilio-messaging-service-sid"
+otp_length = 6
+otp_expiry = 300

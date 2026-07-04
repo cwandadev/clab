@@ -66,7 +66,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             className="text-sm font-medium hover:text-accent">
             {product.name}
           </Link>
-          <span className="font-mono text-sm whitespace-nowrap">
+          <span className="font-mono text-sm whitespace-nowrap" data-no-translate>
             {formatPrice(product.price_usd, currency)}
           </span>
         </div>

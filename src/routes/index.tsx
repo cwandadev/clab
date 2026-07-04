@@ -14,7 +14,7 @@ const productsQO = queryOptions({
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "tieflab — DIY Electronics, Arduino, LEDs & Creative Hardware" },
+      { title: "tieflab, CLab — BUY Electronics, Arduino, LEDs & Creative Hardware" },
       {
         name: "description",
         content:
@@ -55,7 +55,7 @@ function Index() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <div className="flex flex-col lg:flex-row gap-8">
-          <aside className="w-full lg:w-56 shrink-0 space-y-8">
+          <aside className="w-full lg:w-56 shrink-0 space-y-8 lg:sticky lg:top-4 lg:self-start">
             <section>
               <h3 className="mb-4 font-mono text-xs font-medium uppercase tracking-widest text-muted-foreground">
                 Category_Idx

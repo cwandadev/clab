@@ -297,22 +297,61 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          billing_address: string | null
+          billing_code: string | null
           created_at: string
+          currency_preference: string | null
           display_name: string | null
           email: string | null
+          first_name: string | null
           id: string
+          language_preference: string | null
+          last_name: string | null
+          location_address: string | null
+          location_city: string | null
+          location_country: string | null
+          phone: string | null
+          phone_country_code: string | null
+          theme_preference: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          billing_address?: string | null
+          billing_code?: string | null
           created_at?: string
+          currency_preference?: string | null
           display_name?: string | null
           email?: string | null
+          first_name?: string | null
           id: string
+          language_preference?: string | null
+          last_name?: string | null
+          location_address?: string | null
+          location_city?: string | null
+          location_country?: string | null
+          phone?: string | null
+          phone_country_code?: string | null
+          theme_preference?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          billing_address?: string | null
+          billing_code?: string | null
           created_at?: string
+          currency_preference?: string | null
           display_name?: string | null
           email?: string | null
+          first_name?: string | null
           id?: string
+          language_preference?: string | null
+          last_name?: string | null
+          location_address?: string | null
+          location_city?: string | null
+          location_country?: string | null
+          phone?: string | null
+          phone_country_code?: string | null
+          theme_preference?: string | null
         }
         Relationships: []
       }

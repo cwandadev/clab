@@ -118,6 +118,19 @@ export function LanguageSelector() {
     }
   }, []);
 
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && e.newValue && e.newValue !== lang) {
+        setLang(e.newValue);
+        setBusy(true);
+        setProgress(0);
+        translatePage(e.newValue, setProgress).finally(() => setBusy(false));
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, [lang]);
+
   const onChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const target = e.target.value;
     setLang(target);

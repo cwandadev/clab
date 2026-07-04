@@ -28,8 +28,10 @@ function CheckoutPage() {
   });
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [isSelfPickup, setIsSelfPickup] = useState(false);
 
-  const shipping = computeShippingUsd(city, subtotalUsd);
+  const shipping = isSelfPickup ? 0 : computeShippingUsd(city, subtotalUsd);
   const total = subtotalUsd + shipping;
 
   useEffect(() => {
@@ -73,7 +75,7 @@ function CheckoutPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!authed) {
+    if (!isAnonymous && !authed) {
       navigate({ to: "/auth", search: { redirect: "/checkout" } as never });
       return;
     }
@@ -84,7 +86,10 @@ function CheckoutPage() {
         data: {
           ...form,
           customer_phone: form.customer_phone || null,
-          city,
+          city: isSelfPickup ? "Self Pickup" : city,
+          address: isSelfPickup ? "Self Pickup" : form.address,
+          anonymous: isAnonymous,
+          pickup_option: isSelfPickup,
           display_currency: currency,
           items: cart.map((i) => ({ product_id: i.id, quantity: i.quantity })),
           success_url: `${origin}/checkout`,

@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://clab-electronics.lovable.app/sitemap.xml

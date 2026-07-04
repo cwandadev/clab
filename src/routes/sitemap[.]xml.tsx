@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
-const BASE_URL = "https://clab-electronics.lovable.app";
+const BASE_URL = process.env.SITE_URL ?? process.env.VITE_SITE_URL ?? "http://localhost:3000";
 
 interface SitemapEntry {
   path: string;
