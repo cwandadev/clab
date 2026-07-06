@@ -1,10 +1,11 @@
+// src/routes/admin.products.new.tsx
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { upsertProduct } from "@/lib/products.functions";
 
-export const Route = createFileRoute("/admin/new")({
+export const Route = createFileRoute("/admin/products/new")({
   component: NewProduct,
 });
 
@@ -37,7 +38,7 @@ function NewProduct() {
         .split("\n").map((s) => s.trim()).filter((s) => s.length > 0);
       await save({ data: { ...form, extra_images } });
       toast.success("Product added");
-      navigate({ to: "/admin" });
+      navigate({ to: "/admin/products" });
     } catch (e: any) {
       toast.error(e.message);
     } finally {

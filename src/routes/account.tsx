@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -617,74 +617,32 @@ function AccountPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12 sm:py-16">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12 sm:py-16 relative">
         <h1 className="text-2xl font-medium tracking-tight">Account</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Manage your profile, preferences, and orders.
         </p>
 
-        {/* Admin Panel */}
+        {/* Admin Sticky Top Buttons */}
         {userRole === "admin" && (
-          <div className="mt-8 rounded-lg border border-border bg-card p-6 space-y-4">
-            <h2 className="text-lg font-medium">Admin Dashboard</h2>
-            <p className="text-sm text-muted-foreground">
-              Access administrative tools and management panels.
-            </p>
-            <div className="flex flex-wrap gap-3">
+          <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur border-b border-border mb-6">
+            <div className="flex items-center justify-center gap-3">
               <Link
                 to="/admin"
                 className="inline-flex items-center rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90"
               >
-                Manage Products
-              </Link>
-              <Link
-                to="/admin/orders"
-                className="inline-flex items-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-foreground hover:opacity-90"
-              >
-                Manage Orders
-              </Link>
-              <Link
-                to="/admin/users"
-                className="inline-flex items-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-foreground hover:opacity-90"
-              >
-                View All Users
-              </Link>
-              <Link
-                to="/admin/analytics"
-                className="inline-flex items-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-foreground hover:opacity-90"
-              >
-                Analytics
+                Go to Dashboard
               </Link>
               <Link
                 to="/admin/chats"
-                className="inline-flex items-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-foreground hover:opacity-90"
+                className="inline-flex items-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 relative"
               >
-                Live Chats
-              </Link>
-            </div>
-
-            {/* Analytics Placeholders */}
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              <Link
-                to="/admin/analytics/financial"
-                className="block rounded-lg border border-border bg-background p-4 hover:border-foreground transition-colors"
-              >
-                <h3 className="text-sm font-medium">Financial Analytics</h3>
-                <p className="text-xs text-muted-foreground mt-1">Revenue, profit, losses</p>
-              </Link>
-              <Link
-                to="/admin/analytics/products"
-                className="block rounded-lg border border-border bg-background p-4 hover:border-foreground transition-colors"
-              >
-                <h3 className="text-sm font-medium">Products Analytics</h3>
-                <p className="text-xs text-muted-foreground mt-1">Stock, sales, inventory</p>
-              </Link>
-              <Link
-                to="/admin/analytics/customers"
-                className="block rounded-lg border border-border bg-background p-4 hover:border-foreground transition-colors"
-              >
-                <h3 className="text-sm font-medium">Customers Analytics</h3>
-                <p className="text-xs text-muted-foreground mt-1">Locations, payments, retention</p>
+                Chat with Clients
+                {chatMessages.filter(m => !m.is_from_admin).length > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-medium text-white">
+                    {chatMessages.filter(m => !m.is_from_admin).length}
+                  </span>
+                )}
               </Link>
             </div>
           </div>
@@ -824,85 +782,6 @@ function AccountPage() {
           </div>
         )}
 
-        {/* Live Chat Support */}
-        {(userRole === "user" || userRole === "admin") && (
-          <div className="mt-8 rounded-lg border border-border bg-card p-6 space-y-4">
-            <h2 className="text-lg font-medium">Live Chat Support</h2>
-            <p className="text-sm text-muted-foreground">
-              {userRole === "admin" ? "Respond to client messages in real time." : "Need help? Chat with our support team."}
-            </p>
-
-            <div className="h-96 flex flex-col border border-border rounded-md bg-background">
-              <div
-                ref={chatContainerRef}
-                className="flex-1 overflow-y-auto p-4 space-y-2"
-              >
-                {chatMessages.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    No messages yet. Start a conversation!
-                  </p>
-                ) : (
-                  chatMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.is_from_admin ? "justify-start" : "justify-end"}`}
-                    >
-                      <div
-                        className={`max-w-[70%] rounded-lg p-3 space-y-1 ${
-                          msg.is_from_admin
-                            ? "bg-secondary text-foreground"
-                            : "bg-foreground text-background"
-                        }`}
-                      >
-                        <p className="text-sm">{msg.message}</p>
-                        {msg.attachment_url && (
-                          <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs underline break-all">
-                            Attachment
-                          </a>
-                        )}
-                        <p className="text-xs opacity-70">
-                          {new Date(msg.created_at).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="border-t border-border p-3">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
-                    placeholder="Type your message..."
-                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  />
-                  <label className="cursor-pointer inline-flex items-center justify-center rounded-md border border-input px-3 text-sm hover:bg-secondary">
-                    📎
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={(e) => setAttachment(e.target.files?.[0] || null)}
-                    />
-                  </label>
-                  <button
-                    onClick={sendChatMessage}
-                    disabled={!newMessage.trim() && !attachment}
-                    className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:opacity-50"
-                  >
-                    Send
-                  </button>
-                </div>
-                {attachment && (
-                  <p className="text-xs text-muted-foreground mt-1">Selected: {attachment.name}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Reviews Section */}
         {userRole === "user" && (
           <div className="mt-8 rounded-lg border border-border bg-card p-6 space-y-4">
@@ -1021,6 +900,164 @@ function AccountPage() {
           </div>
         )}
 
+        {/* Client Chat Section */}
+        {userRole === "user" && (
+          <div id="chat-section" className="mt-8 rounded-lg border border-border bg-card p-6 space-y-4">
+            <h2 className="text-lg font-medium">Live Chat Support</h2>
+            <p className="text-sm text-muted-foreground">
+              Need help? Chat with our support team.
+            </p>
+
+            <div className="h-96 flex flex-col border border-border rounded-md bg-background">
+              <div
+                ref={chatContainerRef}
+                className="flex-1 overflow-y-auto p-4 space-y-2"
+              >
+                {chatMessages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No messages yet. Start a conversation!
+                  </p>
+                ) : (
+                  chatMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.is_from_admin ? "justify-start" : "justify-end"}`}
+                    >
+                      <div
+                        className={`max-w-[70%] rounded-lg p-3 space-y-1 ${
+                          msg.is_from_admin
+                            ? "bg-secondary text-foreground"
+                            : "bg-foreground text-background"
+                        }`}
+                      >
+                        <p className="text-sm">{msg.message}</p>
+                        {msg.attachment_url && (
+                          <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs underline break-all">
+                            Attachment
+                          </a>
+                        )}
+                        <p className="text-xs opacity-70">
+                          {new Date(msg.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="border-t border-border p-3">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
+                    placeholder="Type your message..."
+                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                  <label className="cursor-pointer inline-flex items-center justify-center rounded-md border border-input px-3 text-sm hover:bg-secondary">
+                    📎
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                  <button
+                    onClick={sendChatMessage}
+                    disabled={!newMessage.trim() && !attachment}
+                    className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:opacity-50"
+                  >
+                    Send
+                  </button>
+                </div>
+                {attachment && (
+                  <p className="text-xs text-muted-foreground mt-1">Selected: {attachment.name}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Admin Chat Section */}
+        {userRole === "admin" && (
+          <div className="mt-8 rounded-lg border border-border bg-card p-6 space-y-4">
+            <h2 className="text-lg font-medium">Live Chat Support</h2>
+            <p className="text-sm text-muted-foreground">
+              Respond to client messages in real time.
+            </p>
+
+            <div className="h-96 flex flex-col border border-border rounded-md bg-background">
+              <div
+                ref={chatContainerRef}
+                className="flex-1 overflow-y-auto p-4 space-y-2"
+              >
+                {chatMessages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No messages yet. Start a conversation!
+                  </p>
+                ) : (
+                  chatMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.is_from_admin ? "justify-start" : "justify-end"}`}
+                    >
+                      <div
+                        className={`max-w-[70%] rounded-lg p-3 space-y-1 ${
+                          msg.is_from_admin
+                            ? "bg-secondary text-foreground"
+                            : "bg-foreground text-background"
+                        }`}
+                      >
+                        <p className="text-sm">{msg.message}</p>
+                        {msg.attachment_url && (
+                          <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs underline break-all">
+                            Attachment
+                          </a>
+                        )}
+                        <p className="text-xs opacity-70">
+                          {new Date(msg.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="border-t border-border p-3">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
+                    placeholder="Type your message..."
+                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                  <label className="cursor-pointer inline-flex items-center justify-center rounded-md border border-input px-3 text-sm hover:bg-secondary">
+                    📎
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                  <button
+                    onClick={sendChatMessage}
+                    disabled={!newMessage.trim() && !attachment}
+                    className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:opacity-50"
+                  >
+                    Send
+                  </button>
+                </div>
+                {attachment && (
+                  <p className="text-xs text-muted-foreground mt-1">Selected: {attachment.name}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
           <div className="rounded-lg border border-border bg-card p-6 space-y-4">
             <h2 className="text-lg font-medium">Profile Picture</h2>
@@ -1130,43 +1167,64 @@ function AccountPage() {
             )}
           </div>
 
-          {/* Checkout Options Information */}
-          <div className="rounded-lg border border-border bg-card p-6 space-y-4">
-            <h2 className="text-lg font-medium">Checkout Options</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-md border border-border bg-background p-4 space-y-2">
-                <h3 className="text-sm font-medium">Self-Pickup</h3>
-                <p className="text-xs text-muted-foreground">
-                  Choose self-pickup at checkout to skip delivery. No address needed—just show your order confirmation at pickup.
-                </p>
-              </div>
-              <div className="rounded-md border border-border bg-background p-4 space-y-2">
-                <h3 className="text-sm font-medium">Anonymous Checkout</h3>
-                <p className="text-xs text-muted-foreground">
-                  Complete your purchase without creating an account. Provide only the necessary payment details—no personal information required.
-                </p>
-              </div>
-              <div className="rounded-md border border-border bg-background p-4 space-y-2">
-                <h3 className="text-sm font-medium">Cash Payment</h3>
-                <p className="text-xs text-muted-foreground">
-                  Pay with cash upon delivery or pickup. Simple and convenient.
-                </p>
-              </div>
-              <div className="rounded-md border border-border bg-background p-4 space-y-2">
-                <h3 className="text-sm font-medium">Card & Stripe</h3>
-                <p className="text-xs text-muted-foreground">
-                  Pay securely using credit/debit cards via Stripe.
-                </p>
-              </div>
-              <div className="rounded-md border border-border bg-background p-4 space-y-2">
-                <h3 className="text-sm font-medium">WhatsApp Order</h3>
-                <p className="text-xs text-muted-foreground">
-                  Place orders directly through WhatsApp for personalized assistance.
-                </p>
+          {/* Checkout Options Information - Only for Regular Users */}
+          {userRole === "user" && (
+            <div className="rounded-lg border border-border bg-card p-6 space-y-4">
+              <h2 className="text-lg font-medium">Checkout Options</h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-md border border-border bg-background p-4 space-y-2">
+                  <h3 className="text-sm font-medium">Self-Pickup</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Choose self-pickup at checkout to skip delivery. No address needed—just show your order confirmation at pickup.
+                  </p>
+                </div>
+                <div className="rounded-md border border-border bg-background p-4 space-y-2">
+                  <h3 className="text-sm font-medium">Anonymous Checkout</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Complete your purchase without creating an account. Provide only the necessary payment details—no personal information required.
+                  </p>
+                </div>
+                <div className="rounded-md border border-border bg-background p-4 space-y-2">
+                  <h3 className="text-sm font-medium">Cash Payment</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Pay with cash upon delivery or pickup. Simple and convenient.
+                  </p>
+                </div>
+                <div className="rounded-md border border-border bg-background p-4 space-y-2">
+                  <h3 className="text-sm font-medium">Card & Stripe</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Pay securely using credit/debit cards via Stripe.
+                  </p>
+                </div>
+                <div className="rounded-md border border-border bg-background p-4 space-y-2">
+                  <h3 className="text-sm font-medium">WhatsApp Order</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Place orders directly through WhatsApp for personalized assistance.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </form>
+
+        {/* Client Sticky Chat Button */}
+        {userRole === "user" && (
+          <div className="fixed bottom-6 right-6 z-50">
+            <button
+              onClick={() => document.getElementById('chat-section')?.scrollIntoView({ behavior: 'smooth' })}
+              className="inline-flex items-center justify-center rounded-full bg-foreground p-4 text-background shadow-lg hover:opacity-90"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              {chatMessages.filter(m => !m.is_from_admin && !m.read).length > 0 && (
+                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-medium text-white">
+                  {chatMessages.filter(m => !m.is_from_admin && !m.read).length}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
       </main>
       <Footer />
     </div>

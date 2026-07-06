@@ -1,8 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+// import { Header } from "@/components/Header";
+// import { Footer } from "@/components/Footer";
 
 export const Route = createFileRoute("/admin/analytics")({
   head: () => ({ meta: [{ title: "Analytics — Admin — tieflab" }] }),
@@ -32,7 +32,7 @@ export default function AdminAnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header />
+      {/* <Header /> */}
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-12">
         <h1 className="text-2xl font-medium tracking-tight">Analytics</h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -98,7 +98,7 @@ export default function AdminAnalyticsPage() {
           )}
         </div>
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }

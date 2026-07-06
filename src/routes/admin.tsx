@@ -1,6 +1,8 @@
-import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
+// src/routes/admin.tsx
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
+import { AdminSidebar } from "@/components/AdminSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { isCurrentUserAdmin } from "@/lib/products.functions";
@@ -17,7 +19,6 @@ export const Route = createFileRoute("/admin")({
 function AdminLayout() {
   const checkAdmin = useServerFn(isCurrentUserAdmin);
   const [status, setStatus] = useState<"loading" | "admin" | "denied">("loading");
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
     checkAdmin()
@@ -51,47 +52,12 @@ function AdminLayout() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <div className="mb-6 flex items-end justify-between border-b border-border pb-4 gap-4 flex-wrap">
-          <div>
-            <h1 className="text-lg font-medium tracking-tight">Admin Console</h1>
-            <p className="font-mono text-xs text-muted-foreground">
-              Operational // Warehouse Kigali
-            </p>
-          </div>
-          <nav className="flex gap-1 rounded-md bg-secondary p-0.5 ring-1 ring-black/5">
-            <TabLink to="/admin" exact pathname={pathname} label="Products" />
-            <TabLink to="/admin/orders" pathname={pathname} label="Orders" />
-            <TabLink to="/admin/new" pathname={pathname} label="+ New Product" />
-          </nav>
-        </div>
-        <Outlet />
+      <div className="flex">
+        <AdminSidebar />
+        <main className="flex-1 p-6 overflow-y-auto h-[calc(100vh-4rem)]">
+          <Outlet />
+        </main>
       </div>
     </div>
-  );
-}
-
-function TabLink({
-  to,
-  label,
-  pathname,
-  exact,
-}: {
-  to: string;
-  label: string;
-  pathname: string;
-  exact?: boolean;
-}) {
-  const active = exact ? pathname === to : pathname.startsWith(to);
-  return (
-    <Link
-      to={to}
-      className={
-        "rounded px-3 py-1.5 text-xs font-medium transition-colors " +
-        (active ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground")
-      }
-    >
-      {label}
-    </Link>
   );
 }

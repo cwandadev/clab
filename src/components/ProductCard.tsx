@@ -1,3 +1,4 @@
+// src/components/ProductCard.tsx
 import { Link } from "@tanstack/react-router";
 import { Heart } from "lucide-react";
 import { useStore, isComponentProduct } from "@/lib/store";

@@ -1,11 +1,12 @@
+// src/routes/admin.products.edit.$id.tsx
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { upsertProduct, listAdminProducts, getProductImages } from "@/lib/products.functions";
-import { ProductForm } from "./admin.new";
+import { ProductForm } from "./new";
 
-export const Route = createFileRoute("/admin/edit/$id")({
+export const Route = createFileRoute("/admin/products/edit/$id")({
   component: EditProduct,
 });
 
@@ -64,7 +65,7 @@ function EditProduct() {
         },
       });
       toast.success("Product updated");
-      navigate({ to: "/admin" });
+      navigate({ to: "/admin/products" });
     } catch (e: any) {
       toast.error(e.message);
     } finally {

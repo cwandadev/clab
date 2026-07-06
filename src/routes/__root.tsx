@@ -8,7 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode, Suspense } from "react";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 import { StoreProvider } from "../lib/store";
@@ -203,7 +203,7 @@ function RootComponent() {
         <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading…</div>}>
           <Outlet />
         </Suspense>
-        <Toaster position="top-right" richColors />
+        <Toaster position="bottom-right" richColors />
       </StoreProvider>
     </QueryClientProvider>
   );
