@@ -38,7 +38,7 @@ function AdminLayout() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="mx-auto max-w-md px-4 py-16 text-center">
+        <main id="main" className="mx-auto max-w-md px-4 py-16 text-center">
           <h1 className="text-xl font-medium">Admin access required</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Your account does not have admin permissions. Ask an existing tieflab admin to grant
@@ -54,7 +54,7 @@ function AdminLayout() {
       <Header />
       <div className="flex">
         <AdminSidebar />
-        <main className="flex-1 p-6 overflow-y-auto h-[calc(100vh-4rem)]">
+        <main id="main" className="flex-1 p-6 overflow-y-auto h-[calc(100vh-4rem)]">
           <Outlet />
         </main>
       </div>

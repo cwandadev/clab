@@ -93,7 +93,7 @@ export function SearchSheet({ open, onOpenChange }: { open: boolean; onOpenChang
           {recent.length > 0 && (
             <section>
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Recent</h3>
+                <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Recent</h2>
                 <button onClick={clearRecent} className="text-xs text-muted-foreground underline">Clear</button>
               </div>
               <ul>
@@ -108,7 +108,7 @@ export function SearchSheet({ open, onOpenChange }: { open: boolean; onOpenChang
             </section>
           )}
           <section>
-            <h3 className="mb-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">Browse</h3>
+            <h2 className="mb-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">Browse</h2>
             <div className="flex flex-wrap gap-2">
               {categories.map((c) => <button key={c} onClick={() => setQ(c)} className="rounded-full border border-border px-3 py-1.5 text-sm hover:bg-secondary">{c}</button>)}
             </div>

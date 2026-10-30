@@ -15,7 +15,7 @@ function WishlistPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <main id="main" className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <h1 className="text-2xl font-medium tracking-tight">Your Wishlist</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {wishlist.length} {wishlist.length === 1 ? "item" : "items"} saved.

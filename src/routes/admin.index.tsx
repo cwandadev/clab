@@ -88,7 +88,7 @@ function AdminOverview() {
                 <li key={p.id}>
                   <Link to="/admin/products/edit/$id" params={{ id: p.id }} className="flex justify-between px-4 py-2.5 text-sm hover:bg-secondary/50">
                     <span className="truncate">{p.name}</span>
-                    <span className={`font-mono ${p.stock === 0 ? "text-destructive" : "text-amber-600"}`}>{p.stock}</span>
+                    <span className={`font-mono ${p.stock === 0 ? "text-destructive" : "text-amber-700"}`}>{p.stock}</span>
                   </Link>
                 </li>
               ))}

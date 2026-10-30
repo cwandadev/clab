@@ -118,7 +118,7 @@ function Index() {
   const filterControls = (id: string) => (
     <div className="space-y-6">
       <section>
-        <h3 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">Sort</h3>
+        <h2 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">Sort</h2>
         <div className="space-y-1">
           {SORTS.map((s) => (
             <label key={s.id} className="flex cursor-pointer items-center gap-2 py-1 text-sm">
@@ -128,7 +128,7 @@ function Index() {
         </div>
       </section>
       <section>
-        <h3 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">Voltage</h3>
+        <h2 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">Voltage</h2>
         {VOLTAGES.map((v) => (
           <label key={v} className="flex cursor-pointer items-center gap-2 py-1 text-sm">
             <input type="checkbox" checked={f.voltage.includes(v)} className="size-4 rounded"
@@ -137,7 +137,7 @@ function Index() {
         ))}
       </section>
       <section>
-        <h3 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">Price (RWF)</h3>
+        <h2 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">Price (RWF)</h2>
         <div className="flex items-center gap-2">
           <input type="number" inputMode="numeric" min={0} placeholder="Min" aria-label="Minimum price" value={f.min ?? ""}
             onChange={(e) => update({ min: e.target.value === "" ? null : Math.max(0, Number(e.target.value)) })}
@@ -155,12 +155,12 @@ function Index() {
     </div>
   );
 
-  const chip = (on: boolean) => `shrink-0 rounded-full border px-3.5 py-1.5 text-sm transition-colors ${on ? "border-foreground bg-foreground text-background" : "border-border hover:bg-secondary"}`;
+  const chip = (on: boolean) => `inline-flex h-10 shrink-0 items-center rounded-full border px-4 text-sm transition-colors ${on ? "border-foreground bg-foreground text-background" : "border-border hover:bg-secondary"}`;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8"
+      <main id="main" className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8"
         onClickCapture={(e) => {
           if ((e.target as HTMLElement).closest('a[href^="/products/"]')) lastView = { f, shown, autoUntil, y: window.scrollY };
         }}>
@@ -190,7 +190,7 @@ function Index() {
           <aside className="hidden w-56 shrink-0 lg:block">
             <div className="sticky top-20 space-y-6">
               <section>
-                <h3 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">Category</h3>
+                <h2 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">Category</h2>
                 <ul className="space-y-1">
                   <li><button onClick={() => update({ category: null })} className={`flex w-full justify-between rounded px-2 py-1 text-sm ${!f.category ? "bg-secondary font-medium" : "hover:bg-secondary/60"}`}><span>All</span><span className="font-mono text-muted-foreground">{products.length}</span></button></li>
                   {categories.map(([c, n]) => (

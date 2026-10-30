@@ -45,7 +45,7 @@ export function CartSheet() {
               <Truck className="size-3.5" />
               {left > 0 ? <>Add <b className="font-mono">{formatRwf(left)}</b> for free Kigali delivery</> : <b>Free Kigali delivery unlocked</b>}
             </p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border" role="progressbar" aria-label="Progress to free Kigali delivery" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
               <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pct}%` }} />
             </div>
           </div>

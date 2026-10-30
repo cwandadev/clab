@@ -48,7 +48,7 @@ export function ProductCard({ product, priority = false }: { product: ProductCar
           sizes="(min-width: 1280px) 22vw, (min-width: 1024px) 28vw, (min-width: 640px) 31vw, 48vw" />
         <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
           {soldOut && <span className="rounded bg-foreground/90 px-1.5 py-0.5 font-mono text-[10px] uppercase text-background">Sold out</span>}
-          {low && <span className="rounded bg-amber-500 px-1.5 py-0.5 font-mono text-[10px] uppercase text-white">Only {product.stock} left</span>}
+          {low && <span className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-[10px] uppercase text-amber-900">Only {product.stock} left</span>}
           {onSale && !soldOut && <span className="rounded bg-accent px-1.5 py-0.5 font-mono text-[10px] uppercase text-accent-foreground">Sale</span>}
         </div>
       </Link>
@@ -56,7 +56,7 @@ export function ProductCard({ product, priority = false }: { product: ProductCar
       <button
         onClick={() => toggleWishlist({ id: product.id, slug: product.slug, name: product.name, price_rwf: product.price_rwf, image_url: product.image_url })}
         aria-label={wished ? "Remove from saved" : "Save for later"} aria-pressed={wished}
-        className="absolute right-2 top-2 grid size-9 place-items-center rounded-full bg-background/90 ring-1 ring-black/5 backdrop-blur transition hover:bg-background">
+        className="absolute right-1.5 top-1.5 grid size-10 place-items-center rounded-full bg-background/90 ring-1 ring-black/5 backdrop-blur transition hover:bg-background">
         <Heart className={"size-4 " + (wished ? "fill-accent stroke-accent" : "stroke-muted-foreground")} />
       </button>
 
@@ -74,7 +74,7 @@ export function ProductCard({ product, priority = false }: { product: ProductCar
           </div>
           <button onClick={quickAdd} disabled={soldOut}
             aria-label={soldOut ? "Sold out" : `Add ${product.name} to cart`}
-            className="grid size-9 shrink-0 place-items-center rounded-full bg-foreground text-background transition active:scale-95 disabled:bg-secondary disabled:text-muted-foreground">
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-foreground text-background transition active:scale-95 disabled:bg-secondary disabled:text-muted-foreground">
             {justAdded ? <Check className="size-4" /> : <Plus className="size-4" />}
           </button>
         </div>

@@ -48,10 +48,10 @@
   --secondary: oklch(0.96 0.003 285);
   --secondary-foreground: oklch(0.21 0.006 285);
   --muted: oklch(0.96 0.003 285);
-  --muted-foreground: oklch(0.55 0.013 285);
-  --accent: oklch(0.62 0.14 162);              /* emerald #059669 */
+  --muted-foreground: oklch(0.48 0.013 285);   /* darker for 4.5:1 contrast */
+  --accent: oklch(0.53 0.12 162);              /* emerald-700: 4.5:1 with white text */
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.58 0.22 27);
+  --destructive: oklch(0.52 0.21 27);
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.92 0.005 285);
   --input: oklch(0.92 0.005 285);
@@ -73,7 +73,7 @@
   --muted-foreground: oklch(0.7 0.01 285);
   --accent: oklch(0.62 0.14 162);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.58 0.22 27);
+  --destructive: oklch(0.52 0.21 27);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.62 0.14 162);
@@ -119,4 +119,25 @@
   .toaster[data-sonner-toast] {
     animation: fadeIn 0.3s ease-out;
   }
+}
+
+/* ---------- Accessibility (Round 3) ---------- */
+/* A clear focus ring for keyboard users only (mouse and touch clicks don't show it). */
+:where(a, button, input, select, textarea, summary, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+/* People who turn on "reduce motion" get no slides, zooms or smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* Stops iOS from zooming into inputs smaller than 16px when they get focus. */
+@media (max-width: 767px) {
+  input, select, textarea { font-size: max(16px, 1em); }
 }

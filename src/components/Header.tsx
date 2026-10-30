@@ -75,7 +75,8 @@ export function Header() {
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value as never)}
-            className="sm:hidden rounded-md bg-secondary px-2 py-1 font-mono text-[10px] ring-1 ring-black/5"
+            aria-label="Display currency"
+            className="sm:hidden h-9 rounded-md bg-secondary px-2 font-mono text-xs ring-1 ring-black/5"
             data-no-translate
           >
             {CURRENCIES.map((c) => (
@@ -86,7 +87,7 @@ export function Header() {
           </select>
           <Link
             to="/wishlist"
-            className="relative hidden sm:inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+            className="relative hidden sm:inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
             aria-label="Wishlist"
           >
             <Heart className="size-4" />
@@ -97,20 +98,20 @@ export function Header() {
             )}
           </Link>
           <button onClick={() => setSearchOpen(true)} aria-label="Search"
-            className="hidden md:inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary">
+            className="hidden md:inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary">
             <Search className="size-4" />
           </button>
           {user && <NotificationBell userId={user.id} />}
           {user ? (
             <Link to="/account" aria-label="Account" title={user.name}
-              className="hidden sm:inline-flex size-9 items-center justify-center rounded-full hover:ring-2 hover:ring-border">
+              className="hidden sm:inline-flex size-10 items-center justify-center rounded-full hover:ring-2 hover:ring-border">
               <UserAvatar name={user.name} url={user.avatarUrl} size={30} />
             </Link>
           ) : (
             <Link
               to="/auth"
               search={{ redirect: "/", code: undefined, error: undefined, error_description: undefined as any }}
-              className="hidden sm:inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+              className="hidden sm:inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
               aria-label="Sign in"
             >
               <User className="size-4" />
@@ -136,7 +137,7 @@ export function Header() {
           </p>
           <button
             onClick={() => { localStorage.setItem(BANNER_KEY, "1"); setBannerVisible(false); }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-background/70 hover:text-background"
+            className="absolute right-0 top-1/2 grid size-10 -translate-y-1/2 place-items-center text-background/70 hover:text-background"
             aria-label="Dismiss banner"
           >
             ✕

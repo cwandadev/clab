@@ -576,7 +576,7 @@ function AccountPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12 sm:py-16 relative">
+      <main id="main" className="mx-auto w-full max-w-4xl flex-1 px-4 py-12 sm:py-16 relative">
         <h1 className="text-2xl font-medium tracking-tight">Account</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Manage your profile, preferences, and orders.

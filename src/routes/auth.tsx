@@ -144,7 +144,7 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="mx-auto w-full max-w-md flex-1 px-4 py-12 sm:py-16">
+      <main id="main" className="mx-auto w-full max-w-md flex-1 px-4 py-12 sm:py-16">
         <h1 className="text-2xl font-medium tracking-tight">
           {mode === "signin" ? "Sign in" : "Create account"}
         </h1>
@@ -201,11 +201,12 @@ function AuthPage() {
   );
 }
 
+/** Wrapping the input in the label ties them together for screen readers and enlarges the tap area. */
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label className="block text-xs font-medium mb-1">{label}</label>
+    <label className="block">
+      <span className="block text-xs font-medium mb-1">{label}</span>
       {children}
-    </div>
+    </label>
   );
 }

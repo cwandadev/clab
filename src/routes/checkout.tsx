@@ -73,8 +73,9 @@ function CheckoutPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="mx-auto max-w-2xl px-4 py-24 text-center">
-          <p className="text-sm text-muted-foreground">Your cart is empty.</p>
+        <main id="main" className="mx-auto max-w-2xl px-4 py-24 text-center">
+          <h1 className="text-xl font-medium">Checkout</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Your cart is empty.</p>
           <Link to="/" className="mt-4 inline-block underline">Continue shopping</Link>
         </main>
       </div>
@@ -126,7 +127,7 @@ function CheckoutPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+      <main id="main" className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <h1 className="text-2xl font-medium tracking-tight">Checkout</h1>
 
         {authed === false && (
