@@ -10,7 +10,7 @@ export type ProductCardData = {
   slug: string;
   name: string;
   description: string | null;
-  price_usd: number;
+  price_rwf: number;
   image_url: string | null;
   spec_1: string | null;
   spec_2: string | null;
@@ -38,7 +38,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           e.preventDefault();
           toggleWishlist({
             id: product.id, slug: product.slug, name: product.name,
-            price_usd: product.price_usd, image_url: product.image_url,
+            price_rwf: product.price_rwf, image_url: product.image_url,
           });
         }}
         aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
@@ -68,7 +68,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             {product.name}
           </Link>
           <span className="font-mono text-sm whitespace-nowrap" data-no-translate>
-            {formatPrice(product.price_usd, currency)}
+            {formatPrice(product.price_rwf, currency)}
           </span>
         </div>
         <div className="mb-4 flex flex-wrap gap-2">
@@ -89,7 +89,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         onClick={() => {
           addToCart({
             id: product.id, slug: product.slug, name: product.name,
-            price_usd: product.price_usd, image_url: product.image_url,
+            price_rwf: product.price_rwf, image_url: product.image_url,
           }, 1);
           toast.success(`${product.name} ${isKit ? "added to kit" : "added to cart"}`);
         }}

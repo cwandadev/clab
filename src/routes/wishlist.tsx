@@ -33,7 +33,7 @@ function WishlistPage() {
                 key={w.id}
                 product={{
                   id: w.id, slug: w.slug, name: w.name,
-                  description: null, price_usd: w.price_usd,
+                  description: null, price_rwf: w.price_rwf,
                   image_url: w.image_url, spec_1: null, spec_2: null, stock: 99,
                 }}
               />

@@ -8,7 +8,8 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useStore } from "@/lib/store";
-import { CURRENCIES } from "@/lib/currency";
+import { CURRENCIES, formatRwf } from "@/lib/currency";
+import { SupportChat } from "@/components/SupportChat";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/account")({
@@ -105,6 +106,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 
 function AccountPage() {
   const [userRole, setUserRole] = useState<"admin" | "user" | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -124,6 +126,7 @@ function AccountPage() {
   const [reviewComment, setReviewComment] = useState("");
   const [reviewPhoto, setReviewPhoto] = useState<File | null>(null);
   const [reviewLink, setReviewLink] = useState("");
+  const [reviewProductId, setReviewProductId] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
   const { currency, setCurrency } = useStore();
 
@@ -198,6 +201,7 @@ function AccountPage() {
   async function loadProfile() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    setCurrentUserId(user.id);
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -392,7 +396,7 @@ function AccountPage() {
 
       let query = supabase
         .from("orders")
-        .select("*")
+        .select("*, order_items(*)")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -447,44 +451,6 @@ function AccountPage() {
     }
   }
 
-  async function sendChatMessage() {
-    if (!newMessage.trim() && !attachment) return;
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      let attachmentUrl: string | undefined;
-
-      if (attachment) {
-        const fileExt = attachment.name.split('.').pop();
-        const filePath = `chat/${user.id}/${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from("chat-attachments")
-          .upload(filePath, attachment);
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from("chat-attachments").getPublicUrl(filePath);
-        attachmentUrl = publicUrl;
-      }
-
-      const { error } = await supabase
-        .from("chat_messages")
-        .insert({
-          user_id: user.id,
-          message: newMessage.trim() || "Sent an attachment",
-          is_from_admin: false,
-          attachment_url: attachmentUrl,
-        });
-
-      if (error) throw error;
-      setNewMessage("");
-      setAttachment(null);
-      loadChatMessages();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send message");
-    }
-  }
-
   async function loadReviews() {
     setLoadingReviews(true);
     try {
@@ -493,8 +459,9 @@ function AccountPage() {
         .select(`
           *,
           profiles:user_id(first_name, last_name),
-          review_responses(*)
+          products:product_id(name, slug)
         `)
+        .eq("user_id", (await supabase.auth.getUser()).data.user?.id ?? "")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -518,7 +485,7 @@ function AccountPage() {
 
       if (reviewPhoto) {
         const fileExt = reviewPhoto.name.split('.').pop();
-        const filePath = `reviews/${user.id}/${Date.now()}.${fileExt}`;
+        const filePath = `${user.id}/${Date.now()}.${fileExt}`; // first folder = user id (storage rule)
         const { error: uploadError } = await supabase.storage
           .from("review-photos")
           .upload(filePath, reviewPhoto);
@@ -527,16 +494,13 @@ function AccountPage() {
         photoUrl = publicUrl;
       }
 
-      const { data: products } = await supabase
-        .from("products")
-        .select("id")
-        .limit(1);
+      if (!reviewProductId) throw new Error("Choose the product you are reviewing.");
 
       const { error } = await supabase
         .from("reviews")
         .insert({
           user_id: user.id,
-          product_id: products?.[0]?.id,
+          product_id: reviewProductId,
           rating: reviewRating,
           comment: reviewComment.trim(),
           photo_url: photoUrl || null,
@@ -704,13 +668,15 @@ function AccountPage() {
                     <div key={order.id} className="rounded-md border border-border bg-background p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium">Order #{order.id.slice(0, 8).toUpperCase()}</p>
+                          <Link to="/orders/$id" params={{ id: order.id }} className="text-sm font-medium font-mono hover:underline">
+                            {order.order_code ?? `#${order.id.slice(0, 8).toUpperCase()}`} →
+                          </Link>
                           <p className="text-xs text-muted-foreground">
                             {new Date(order.created_at).toLocaleDateString()}
                           </p>
                         </div>
                         <span className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium ${getStatusColor(order.status || "pending")}`}>
-                          {order.status || "Pending"}
+                          {order.status === "pending" && order.payment_method === "momo" ? "Awaiting payment" : order.status || "Pending"}
                         </span>
                       </div>
 
@@ -741,12 +707,12 @@ function AccountPage() {
 
                       <div className="text-sm">
                         <span className="text-muted-foreground">Total:</span>{" "}
-                        <span className="font-medium">{order.display_currency || "RWF"} {order.total_usd?.toFixed(2)}</span>
+                        <span className="font-medium font-mono">{formatRwf(order.total_rwf)}</span>
                       </div>
 
                       {order.payment_method && (
                         <div className="text-xs text-muted-foreground">
-                          Paid via {order.payment_method}
+                          {order.payment_method === "momo" ? "Mobile money" : "Cash"}{order.order_code ? ` · ${order.order_code}` : ""}
                         </div>
                       )}
 
@@ -794,6 +760,21 @@ function AccountPage() {
             <div className="rounded-md border border-border bg-background p-4 space-y-3">
               <h3 className="text-sm font-medium">Write a Review</h3>
               <div>
+                <label className="block text-sm font-medium mb-1">Product</label>
+                {(() => {
+                  // only products from your delivered orders can be reviewed
+                  const bought = new Map<string, string>();
+                  for (const o of orders) if (o.status === "delivered") for (const it of o.order_items ?? []) if (it.product_id) bought.set(it.product_id, it.product_name);
+                  return bought.size === 0 ? (
+                    <p className="mb-3 text-xs text-muted-foreground">You can review products once an order is delivered.</p>
+                  ) : (
+                    <select value={reviewProductId} onChange={(e) => setReviewProductId(e.target.value)}
+                      className="mb-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                      <option value="">Choose a product…</option>
+                      {[...bought].map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                    </select>
+                  );
+                })()}
                 <label className="block text-sm font-medium mb-1">Rating</label>
                 {renderStars(reviewRating, true, setReviewRating)}
               </div>
@@ -900,163 +881,20 @@ function AccountPage() {
           </div>
         )}
 
-        {/* Client Chat Section */}
-        {userRole === "user" && (
-          <div id="chat-section" className="mt-8 rounded-lg border border-border bg-card p-6 space-y-4">
-            <h2 className="text-lg font-medium">Live Chat Support</h2>
+        {/* Support chat */}
+        <div id="chat-section" className="mt-8 rounded-lg border border-border bg-card p-6 space-y-4">
+          <h2 className="text-lg font-medium">Support chat</h2>
+          {userRole === "admin" ? (
             <p className="text-sm text-muted-foreground">
-              Need help? Chat with our support team.
+              Customer conversations are in the <Link to="/admin/chats" className="underline">admin inbox</Link>.
             </p>
-
-            <div className="h-96 flex flex-col border border-border rounded-md bg-background">
-              <div
-                ref={chatContainerRef}
-                className="flex-1 overflow-y-auto p-4 space-y-2"
-              >
-                {chatMessages.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    No messages yet. Start a conversation!
-                  </p>
-                ) : (
-                  chatMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.is_from_admin ? "justify-start" : "justify-end"}`}
-                    >
-                      <div
-                        className={`max-w-[70%] rounded-lg p-3 space-y-1 ${
-                          msg.is_from_admin
-                            ? "bg-secondary text-foreground"
-                            : "bg-foreground text-background"
-                        }`}
-                      >
-                        <p className="text-sm">{msg.message}</p>
-                        {msg.attachment_url && (
-                          <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs underline break-all">
-                            Attachment
-                          </a>
-                        )}
-                        <p className="text-xs opacity-70">
-                          {new Date(msg.created_at).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="border-t border-border p-3">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
-                    placeholder="Type your message..."
-                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  />
-                  <label className="cursor-pointer inline-flex items-center justify-center rounded-md border border-input px-3 text-sm hover:bg-secondary">
-                    📎
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={(e) => setAttachment(e.target.files?.[0] || null)}
-                    />
-                  </label>
-                  <button
-                    onClick={sendChatMessage}
-                    disabled={!newMessage.trim() && !attachment}
-                    className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:opacity-50"
-                  >
-                    Send
-                  </button>
-                </div>
-                {attachment && (
-                  <p className="text-xs text-muted-foreground mt-1">Selected: {attachment.name}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Admin Chat Section */}
-        {userRole === "admin" && (
-          <div className="mt-8 rounded-lg border border-border bg-card p-6 space-y-4">
-            <h2 className="text-lg font-medium">Live Chat Support</h2>
-            <p className="text-sm text-muted-foreground">
-              Respond to client messages in real time.
-            </p>
-
-            <div className="h-96 flex flex-col border border-border rounded-md bg-background">
-              <div
-                ref={chatContainerRef}
-                className="flex-1 overflow-y-auto p-4 space-y-2"
-              >
-                {chatMessages.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    No messages yet. Start a conversation!
-                  </p>
-                ) : (
-                  chatMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.is_from_admin ? "justify-start" : "justify-end"}`}
-                    >
-                      <div
-                        className={`max-w-[70%] rounded-lg p-3 space-y-1 ${
-                          msg.is_from_admin
-                            ? "bg-secondary text-foreground"
-                            : "bg-foreground text-background"
-                        }`}
-                      >
-                        <p className="text-sm">{msg.message}</p>
-                        {msg.attachment_url && (
-                          <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs underline break-all">
-                            Attachment
-                          </a>
-                        )}
-                        <p className="text-xs opacity-70">
-                          {new Date(msg.created_at).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="border-t border-border p-3">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
-                    placeholder="Type your message..."
-                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  />
-                  <label className="cursor-pointer inline-flex items-center justify-center rounded-md border border-input px-3 text-sm hover:bg-secondary">
-                    📎
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={(e) => setAttachment(e.target.files?.[0] || null)}
-                    />
-                  </label>
-                  <button
-                    onClick={sendChatMessage}
-                    disabled={!newMessage.trim() && !attachment}
-                    className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:opacity-50"
-                  >
-                    Send
-                  </button>
-                </div>
-                {attachment && (
-                  <p className="text-xs text-muted-foreground mt-1">Selected: {attachment.name}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+          ) : currentUserId ? (
+            <>
+              <p className="text-sm text-muted-foreground">Questions about an order? Write to us here — we usually reply within the day.</p>
+              <SupportChat threadUserId={currentUserId} asAdmin={false} />
+            </>
+          ) : null}
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
           <div className="rounded-lg border border-border bg-card p-6 space-y-4">
@@ -1179,27 +1017,15 @@ function AccountPage() {
                   </p>
                 </div>
                 <div className="rounded-md border border-border bg-background p-4 space-y-2">
-                  <h3 className="text-sm font-medium">Anonymous Checkout</h3>
+                  <h3 className="text-sm font-medium">Mobile Money</h3>
                   <p className="text-xs text-muted-foreground">
-                    Complete your purchase without creating an account. Provide only the necessary payment details—no personal information required.
+                    Pay with MTN MoMo or Airtel Money. You approve the exact amount on your phone with your PIN.
                   </p>
                 </div>
                 <div className="rounded-md border border-border bg-background p-4 space-y-2">
                   <h3 className="text-sm font-medium">Cash Payment</h3>
                   <p className="text-xs text-muted-foreground">
                     Pay with cash upon delivery or pickup. Simple and convenient.
-                  </p>
-                </div>
-                <div className="rounded-md border border-border bg-background p-4 space-y-2">
-                  <h3 className="text-sm font-medium">Card & Stripe</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Pay securely using credit/debit cards via Stripe.
-                  </p>
-                </div>
-                <div className="rounded-md border border-border bg-background p-4 space-y-2">
-                  <h3 className="text-sm font-medium">WhatsApp Order</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Place orders directly through WhatsApp for personalized assistance.
                   </p>
                 </div>
               </div>

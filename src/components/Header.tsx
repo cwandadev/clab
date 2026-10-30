@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
 import { CURRENCIES } from "@/lib/currency";
 import { Logo } from "./Logo";
+import { NotificationBell } from "./NotificationBell";
+import { FREE_SHIPPING_KIGALI_RWF } from "@/lib/store";
 import { supabase } from "@/integrations/supabase/client";
 
 const BANNER_KEY = "clab.banner.kigali.dismissed";
@@ -11,18 +13,21 @@ const BANNER_KEY = "clab.banner.kigali.dismissed";
 export function Header() {
   const { cartCount, wishlistCount, currency, setCurrency } = useStore();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [bannerVisible, setBannerVisible] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setIsLoggedIn(!!user);
+      setUserId(user?.id ?? null);
     };
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
-        setIsLoggedIn(event === "SIGNED_IN" || event === "USER_UPDATED");
+        setIsLoggedIn(!!session?.user);
+        setUserId(session?.user?.id ?? null);
       }
     });
 
@@ -106,6 +111,7 @@ export function Header() {
               </span>
             )}
           </Link>
+          {userId && <NotificationBell userId={userId} />}
           {isLoggedIn ? (
             <Link
               to="/account"
@@ -139,7 +145,7 @@ export function Header() {
       {bannerVisible && (
         <div className="bg-foreground py-1.5 text-background relative group">
           <p className="text-center font-mono text-[10px] uppercase tracking-widest">
-            Kigali Delivery: Free on all orders exceeding $10 USD
+            Kigali delivery: free from RWF {FREE_SHIPPING_KIGALI_RWF.toLocaleString("en-US")} · Pay with MTN MoMo or Airtel Money
           </p>
           <button
             onClick={() => { localStorage.setItem(BANNER_KEY, "1"); setBannerVisible(false); }}

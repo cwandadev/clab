@@ -25,7 +25,7 @@ export const Route = createFileRoute("/products/$slug")({
   }),
   component: ProductPage,
   errorComponent: ({ error }) => (
-    <div className="p-8 text-center text-sm text-muted-foreground">{error.message}</div>
+    <div className="p-8 text-center text-sm text-muted-foreground">{(error as Error).message}</div>
   ),
   notFoundComponent: () => (
     <div className="p-8 text-center text-sm text-muted-foreground">Product not found.</div>
@@ -71,7 +71,7 @@ function ProductPage() {
   function handleAddToCart() {
     addToCart({
       id: product!.id, slug: product!.slug, name: product!.name,
-      price_usd: Number(product!.price_usd), image_url: product!.image_url,
+      price_rwf: Number(product!.price_rwf), image_url: product!.image_url,
     }, qty);
     toast.success(`Added ${qty} × ${product!.name}`);
   }
@@ -117,7 +117,7 @@ function ProductPage() {
               {product.category}
             </p>
             <h1 className="text-3xl font-medium tracking-tight text-balance">{product.name}</h1>
-            <p className="mt-4 text-3xl font-mono">{formatPrice(Number(product.price_usd), currency)}</p>
+            <p className="mt-4 text-3xl font-mono">{formatPrice(Number(product.price_rwf), currency)}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {product.spec_1 && (
                 <span className="rounded bg-secondary px-2 py-1 font-mono text-[10px] text-muted-foreground ring-1 ring-black/5">{product.spec_1}</span>
@@ -140,7 +140,7 @@ function ProductPage() {
               <button
                 onClick={() => toggleWishlist({
                   id: product.id, slug: product.slug, name: product.name,
-                  price_usd: Number(product.price_usd), image_url: product.image_url,
+                  price_rwf: Number(product.price_rwf), image_url: product.image_url,
                 })}
                 aria-label="Toggle wishlist"
                 className="grid size-11 place-items-center rounded-md ring-1 ring-border hover:bg-secondary"

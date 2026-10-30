@@ -52,7 +52,7 @@ function EditProduct() {
           name: form.name,
           description: form.description,
           category: form.category,
-          price_usd: Number(form.price_usd),
+          price_rwf: Math.round(Number(form.price_rwf)),
           stock: Number(form.stock),
           image_url: form.image_url,
           spec_1: form.spec_1 || "",

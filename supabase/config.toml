@@ -1,1 +1,4 @@
 project_id = "clab"
+
+[functions.pawapay-callback]
+verify_jwt = false

@@ -17,7 +17,7 @@ function NewProduct() {
     name: "",
     description: "",
     category: "Components",
-    price_usd: 0,
+    price_rwf: 0,
     stock: 0,
     image_url: "",
     spec_1: "",
@@ -106,9 +106,9 @@ export function ProductForm({
             <option value="digital_circuit">Component / Kit</option>
           </select>
         </Field>
-        <Field label="Price (USD)">
-          <input required type="number" min={0} step="0.01" value={form.price_usd}
-            onChange={(e) => setForm({ ...form, price_usd: Number(e.target.value) })} className="inp font-mono" />
+        <Field label="Price (RWF, whole francs)">
+          <input required type="number" min={0} step="1" value={form.price_rwf}
+            onChange={(e) => setForm({ ...form, price_rwf: Math.round(Number(e.target.value)) })} className="inp font-mono" />
         </Field>
         <Field label="Stock">
           <input required type="number" min={0} value={form.stock}
