@@ -26,7 +26,7 @@ export const Route = createFileRoute("/")({
   component: Index,
   errorComponent: ({ error }) => (
     <div className="p-8 text-center text-sm text-muted-foreground">
-      Could not load products: {error.message}
+      Could not load products: {(error as Error).message}
     </div>
   ),
 });

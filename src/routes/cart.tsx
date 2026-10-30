@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
-import { useStore, computeShippingUsd } from "@/lib/store";
+import { useStore, shippingFeeRwf } from "@/lib/store";
 import { formatPrice } from "@/lib/currency";
 import { Trash2 } from "lucide-react";
 
@@ -10,9 +10,9 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
-  const { cart, removeFromCart, updateQty, subtotalUsd, currency } = useStore();
-  const shipping = computeShippingUsd("Kigali", subtotalUsd); // preview Kigali shipping
-  const total = subtotalUsd + shipping;
+  const { cart, removeFromCart, updateQty, subtotalRwf, currency } = useStore();
+  const shipping = shippingFeeRwf("Kigali", subtotalRwf); // preview Kigali shipping
+  const total = subtotalRwf + shipping;
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,7 +54,7 @@ function CartPage() {
                       {item.name}
                     </Link>
                     <p className="mt-1 font-mono text-xs text-muted-foreground">
-                      {formatPrice(item.price_usd, currency)} ea
+                      {formatPrice(item.price_rwf, currency)} ea
                     </p>
                     <div className="mt-2 flex items-center gap-3">
                       <div className="flex items-center rounded border border-border">
@@ -82,7 +82,7 @@ function CartPage() {
                     </div>
                   </div>
                   <p className="font-mono text-sm">
-                    {formatPrice(item.price_usd * item.quantity, currency)}
+                    {formatPrice(item.price_rwf * item.quantity, currency)}
                   </p>
                 </li>
               ))}
@@ -95,7 +95,7 @@ function CartPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-mono">{formatPrice(subtotalUsd, currency)}</span>
+                  <span className="font-mono">{formatPrice(subtotalRwf, currency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping (Kigali est.)</span>
@@ -109,7 +109,7 @@ function CartPage() {
                 </div>
               </div>
               <p className="mt-3 text-[10px] text-muted-foreground">
-                Charged in USD. {currency !== "USD" ? "Display currency converted at indicative rates." : ""}
+                Charged in RWF. {currency !== "RWF" ? "Other currencies are approximate." : ""}
               </p>
               <Link
                 to="/checkout"

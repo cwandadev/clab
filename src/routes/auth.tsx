@@ -17,21 +17,15 @@ export const Route = createFileRoute("/auth")({
 });
 
 type Mode = "signin" | "signup";
-type Method = "email" | "phone";
 
 function AuthPage() {
   const { redirect, code, error, error_description } = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("signin");
-  const [method, setMethod] = useState<Method>("email");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("+1");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -127,63 +121,7 @@ function AuthPage() {
     }
   }
 
-  async function handlePhoneSend(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const fullPhoneNumber = `${countryCode}${phone}`;
-      if (!fullPhoneNumber.match(/^\+[1-9]\d{1,14}$/)) {
-        throw new Error("Please enter a valid phone number with country code");
-      }
-      const { error } = await supabase.auth.signInWithOtp({ 
-        phone: fullPhoneNumber,
-        options: { shouldCreateUser: true }
-      });
-      if (error) {
-        if (error.message.includes("Unsupported") || error.message.includes("not enabled")) {
-          throw new Error("Phone authentication is not available. Please use email or Google sign-in.");
-        } else if (error.message.includes("rate limit")) {
-          throw new Error("Too many attempts. Please wait a moment and try again.");
-        }
-        throw error;
-      }
-      setOtpSent(true);
-      toast.success("Verification code sent! Please check your phone.");
-    } catch (err: any) {
-      toast.error(err.message || "Could not send verification code");
-    } finally {
-      setLoading(false);
-    }
-  }
 
-  async function handlePhoneVerify(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const fullPhoneNumber = `${countryCode}${phone}`;
-      if (!otpCode || otpCode.length < 4) {
-        throw new Error("Please enter the complete verification code");
-      }
-      const { error } = await supabase.auth.verifyOtp({
-        phone: fullPhoneNumber,
-        token: otpCode,
-        type: "sms",
-      });
-      if (error) {
-        if (error.message.includes("Invalid") || error.message.includes("expired")) {
-          throw new Error("Invalid or expired code. Please try again or request a new code.");
-        }
-        throw error;
-      }
-      toast.success("Signed in successfully!");
-      await applyUserPreferences();
-      navigate({ to: redirect as never, replace: true });
-    } catch (err: any) {
-      toast.error(err.message || "Verification failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleGoogle() {
     setLoading(true);
@@ -211,7 +149,7 @@ function AuthPage() {
           {mode === "signin" ? "Sign in" : "Create account"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Welcome to tieflab. Sign in with Google, email, or phone.
+          Welcome to tieflab. Sign in with Google or email.
         </p>
 
         <button
@@ -234,12 +172,7 @@ function AuthPage() {
           <div className="h-px flex-1 bg-border" />
         </div>
 
-        <div className="flex gap-1 rounded-md bg-secondary p-0.5">
-          <button onClick={() => setMethod("email")} className={"flex-1 rounded px-3 py-1.5 text-xs font-medium " + (method === "email" ? "bg-background shadow-sm" : "text-muted-foreground")}>Email</button>
-          <button onClick={() => setMethod("phone")} className={"flex-1 rounded px-3 py-1.5 text-xs font-medium " + (method === "phone" ? "bg-background shadow-sm" : "text-muted-foreground")}>Phone</button>
-        </div>
-
-        {method === "email" ? (
+        {(
           <form onSubmit={handleEmail} className="mt-6 space-y-4">
             {mode === "signup" && (
               <Field label="Display name">
@@ -254,40 +187,6 @@ function AuthPage() {
             </Field>
             <button type="submit" disabled={loading} className="w-full rounded-md bg-foreground py-3 text-sm font-medium text-background disabled:opacity-50">
               {loading ? "Working…" : mode === "signin" ? "Sign in" : "Create account"}
-            </button>
-          </form>
-        ) : !otpSent ? (
-          <form onSubmit={handlePhoneSend} className="mt-6 space-y-4">
-            <div className="grid grid-cols-[100px_1fr] gap-2">
-              <Field label="Country">
-                <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className="input-base">
-                  <option value="+1">US +1</option>
-                  <option value="+44">UK +44</option>
-                  <option value="+250">Rwanda +250</option>
-                  <option value="+254">Kenya +254</option>
-                  <option value="+27">South Africa +27</option>
-                  <option value="+234">Nigeria +234</option>
-                  <option value="+91">India +91</option>
-                </select>
-              </Field>
-              <Field label="Phone number">
-                <input type="tel" required placeholder="788 123 456" value={phone} onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 15))} className="input-base" />
-              </Field>
-            </div>
-            <button type="submit" disabled={loading} className="w-full rounded-md bg-foreground py-3 text-sm font-medium text-background disabled:opacity-50">
-              {loading ? "Sending…" : "Send code"}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handlePhoneVerify} className="mt-6 space-y-4">
-            <Field label={`Verification code for ${countryCode}${phone}`}>
-              <input required value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} inputMode="numeric" pattern="[0-9]*" className="input-base tracking-[0.4em] text-center" />
-            </Field>
-            <button type="submit" disabled={loading} className="w-full rounded-md bg-foreground py-3 text-sm font-medium text-background disabled:opacity-50">
-              {loading ? "Verifying…" : "Verify & sign in"}
-            </button>
-            <button type="button" onClick={() => { setOtpSent(false); setOtpCode(""); }} className="w-full text-xs text-muted-foreground underline">
-              Use a different number
             </button>
           </form>
         )}

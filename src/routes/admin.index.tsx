@@ -1,312 +1,100 @@
-// src/routes/admin.index.tsx
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Package, 
-  ShoppingBag, 
-  Users, 
-  DollarSign,
-  MessageSquare,
-  Palette
-} from "lucide-react";
-import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from "recharts";
+import { PackageCheck, Truck, Smartphone, MessageSquare, AlertTriangle, PackageX, Undo2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { formatRwf } from "@/lib/currency";
+import { fetchOverview } from "@/lib/analytics";
+import { StatusPill } from "@/components/StatusPill";
 
-export const Route = createFileRoute("/admin/")({
-  component: AdminOverview,
-});
+export const Route = createFileRoute("/admin/")({ component: AdminOverview });
 
 function AdminOverview() {
-  // Mock data - replace with real API data
-  const stats = {
-    totalRevenue: 16073.49,
-    revenueChange: 9.3,
-    totalProducts: 156,
-    productsChange: 12,
-    totalOrders: 89,
-    ordersChange: -3,
-    totalUsers: 1247,
-    usersChange: 18,
-    totalMotifs: 34,
-    motifsChange: 5,
-    unreadChats: 5,
-  };
+  const { data: o } = useQuery({ queryKey: ["overview", 7], queryFn: () => fetchOverview(7), refetchInterval: 30000 });
+  const { data: recent = [] } = useQuery({
+    queryKey: ["recent-orders"],
+    queryFn: async () => (await supabase.from("orders").select("id, order_code, customer_name, total_rwf, status, created_at")
+      .is("archived_at", null).order("created_at", { ascending: false }).limit(8)).data ?? [],
+    refetchInterval: 30000,
+  });
+  const { data: low = [] } = useQuery({
+    queryKey: ["low-stock"],
+    queryFn: async () => {
+      const { data } = await supabase.from("products").select("id, name, stock, low_stock_threshold").eq("active", true).order("stock").limit(30);
+      return (data ?? []).filter((p) => p.stock <= p.low_stock_threshold).slice(0, 8);
+    },
+  });
 
-  // Chart data
-  const revenueData = [
-    { name: 'Jan', value: 12000 },
-    { name: 'Feb', value: 13500 },
-    { name: 'Mar', value: 14200 },
-    { name: 'Apr', value: 12800 },
-    { name: 'May', value: 15000 },
-    { name: 'Jun', value: 16073 },
+  const a = o?.action;
+  const cards = [
+    { label: "To dispatch", value: a?.to_dispatch, icon: PackageCheck, to: "/admin/orders", hot: true },
+    { label: "Packing / on the way", value: a?.processing, icon: Truck, to: "/admin/orders" },
+    { label: "Awaiting payment", value: a?.awaiting_payment, icon: Smartphone, to: "/admin/orders" },
+    { label: "Chats waiting", value: a?.chats_waiting, icon: MessageSquare, to: "/admin/chats", hot: true },
+    { label: "Refunds pending", value: a?.refunds_pending, icon: Undo2, to: "/admin/orders", hot: true },
+    { label: "Running low", value: a?.low_stock, icon: AlertTriangle, to: "/admin/products" },
+    { label: "Out of stock", value: a?.out_of_stock, icon: PackageX, to: "/admin/products", hot: true },
   ];
-
-  const ordersData = [
-    { name: 'Mon', orders: 12 },
-    { name: 'Tue', orders: 19 },
-    { name: 'Wed', orders: 15 },
-    { name: 'Thu', orders: 22 },
-    { name: 'Fri', orders: 28 },
-    { name: 'Sat', orders: 18 },
-    { name: 'Sun', orders: 10 },
-  ];
-
-  const productCategories = [
-    { name: 'Components', value: 45 },
-    { name: 'Kits', value: 28 },
-    { name: 'Digital', value: 35 },
-    { name: 'DIY', value: 48 },
-  ];
-
-  const COLORS = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981'];
-
-  const StatCard = ({ 
-    title, 
-    value, 
-    change, 
-    icon: Icon, 
-    color = "blue",
-    chartData,
-    chartType = "line"
-  }: any) => {
-    const isPositive = change >= 0;
-    
-    return (
-      <div className="bg-card rounded-lg border border-border p-4 hover:shadow-lg transition-shadow">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className={`p-2 rounded-lg bg-${color}-50`}>
-              <Icon className={`w-4 h-4 text-${color}-500`} />
-            </div>
-            <span className="text-xs font-medium text-muted-foreground">{title}</span>
-          </div>
-          <div className={`flex items-center gap-1 text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-            {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-            {Math.abs(change)}%
-          </div>
-        </div>
-        
-        <div className="text-2xl font-semibold tracking-tight">
-          {typeof value === 'number' && title.toLowerCase().includes('revenue') 
-            ? `$${value.toLocaleString()}`
-            : value.toLocaleString()}
-        </div>
-
-        {chartData && (
-          <div className="h-12 mt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              {chartType === 'line' ? (
-                <LineChart data={chartData}>
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke={isPositive ? '#10b981' : '#ef4444'} 
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              ) : (
-                <AreaChart data={chartData}>
-                  <Area 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke={isPositive ? '#10b981' : '#ef4444'} 
-                    fill={isPositive ? '#10b98120' : '#ef444420'}
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              )}
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard Overview</h1>
-          <p className="text-sm text-muted-foreground">Welcome back! Here's what's happening with your store.</p>
+          <h1 className="text-xl font-medium">Overview</h1>
+          <p className="text-sm text-muted-foreground">What needs doing now.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Last updated: Today at 3:33 AM</span>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <StatCard
-          title="Revenue"
-          value={stats.totalRevenue}
-          change={stats.revenueChange}
-          icon={DollarSign}
-          color="blue"
-          chartData={revenueData}
-        />
-        <StatCard
-          title="Products"
-          value={stats.totalProducts}
-          change={stats.productsChange}
-          icon={Package}
-          color="green"
-          chartData={revenueData.slice(0, 4)}
-          chartType="area"
-        />
-        <StatCard
-          title="Orders"
-          value={stats.totalOrders}
-          change={stats.ordersChange}
-          icon={ShoppingBag}
-          color="orange"
-          chartData={ordersData}
-        />
-        <StatCard
-          title="Users"
-          value={stats.totalUsers}
-          change={stats.usersChange}
-          icon={Users}
-          color="purple"
-          chartData={revenueData.slice(0, 5)}
-        />
-      </div>
-
-      {/* Additional Stats Row */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-        <div className="bg-card rounded-lg border border-border p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Palette className="w-4 h-4 text-purple-500" />
-              <span className="text-xs font-medium text-muted-foreground">Motifs</span>
-            </div>
-            <span className="text-xs text-green-600 font-medium">+{stats.motifsChange}%</span>
-          </div>
-          <div className="text-2xl font-semibold mt-1">{stats.totalMotifs}</div>
-          <div className="h-8 mt-1">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData.slice(0, 5)}>
-                <Area type="monotone" dataKey="value" stroke="#8b5cf6" fill="#8b5cf620" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="bg-card rounded-lg border border-border p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-cyan-500" />
-              <span className="text-xs font-medium text-muted-foreground">Unread Chats</span>
-            </div>
-            <span className={`text-xs font-medium ${stats.unreadChats > 0 ? 'text-red-600' : 'text-green-600'}`}>
-              {stats.unreadChats > 0 ? `${stats.unreadChats} pending` : 'All clear'}
-            </span>
-          </div>
-          <div className="text-2xl font-semibold mt-1">{stats.unreadChats}</div>
-          <div className="mt-2 flex items-center gap-1">
-            <div className="w-full bg-secondary rounded-full h-1.5">
-              <div className="bg-cyan-500 h-1.5 rounded-full" style={{ width: `${(stats.unreadChats / 20) * 100}%` }} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card rounded-lg border border-border p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Package className="w-4 h-4 text-orange-500" />
-              <span className="text-xs font-medium text-muted-foreground">Product Categories</span>
-            </div>
-          </div>
-          <div className="h-16 mt-1">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={productCategories}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={20}
-                  outerRadius={30}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {productCategories.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-1">
-            {productCategories.map((cat, i) => (
-              <div key={cat.name} className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                <span className="text-[10px] text-muted-foreground">{cat.name}</span>
-              </div>
-            ))}
-          </div>
+        <div className="flex gap-6 font-mono text-sm">
+          <div><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Orders today</p><p className="text-lg">{o?.today.orders ?? "—"}</p></div>
+          <div><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Sales today</p><p className="text-lg">{o ? formatRwf(o.today.revenue) : "—"}</p></div>
+          <div><p className="text-[10px] uppercase tracking-widest text-muted-foreground">Last 7 days</p><p className="text-lg">{o ? formatRwf(o.period.revenue) : "—"}</p></div>
         </div>
       </div>
 
-      {/* Orders Chart */}
-      <div className="bg-card rounded-lg border border-border p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium">Weekly Orders</h3>
-          <span className="text-xs text-muted-foreground">Last 7 days</span>
-        </div>
-        <div className="h-48">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={ordersData}>
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis dataKey="name" fontSize={10} />
-              <YAxis fontSize={10} />
-              <Tooltip />
-              <Area 
-                type="monotone" 
-                dataKey="orders" 
-                stroke="#3b82f6" 
-                fill="#3b82f620"
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        {cards.map((c) => (
+          <Link key={c.label} to={c.to} className={`rounded-lg border p-4 transition-colors hover:bg-secondary/60 ${c.hot && (c.value ?? 0) > 0 ? "border-accent/50 bg-accent/5" : "border-border"}`}>
+            <c.icon className="size-4 text-muted-foreground" />
+            <p className="mt-3 font-mono text-2xl">{c.value ?? "—"}</p>
+            <p className="text-xs text-muted-foreground">{c.label}</p>
+          </Link>
+        ))}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
-        <button className="bg-card border border-border rounded-lg p-3 text-sm hover:bg-secondary transition-colors text-left">
-          <span className="block font-medium">+ New Product</span>
-          <span className="text-xs text-muted-foreground">Add to inventory</span>
-        </button>
-        <button className="bg-card border border-border rounded-lg p-3 text-sm hover:bg-secondary transition-colors text-left">
-          <span className="block font-medium">+ New Motif</span>
-          <span className="text-xs text-muted-foreground">Add DIY product</span>
-        </button>
-        <button className="bg-card border border-border rounded-lg p-3 text-sm hover:bg-secondary transition-colors text-left">
-          <span className="block font-medium">📦 View Orders</span>
-          <span className="text-xs text-muted-foreground">Manage pending orders</span>
-        </button>
-        <button className="bg-card border border-border rounded-lg p-3 text-sm hover:bg-secondary transition-colors text-left">
-          <span className="block font-medium">💬 View Chats</span>
-          <span className="text-xs text-muted-foreground">Respond to customers</span>
-        </button>
+      <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+        <section className="rounded-lg border border-border">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <h2 className="text-sm font-medium">Latest orders</h2>
+            <Link to="/admin/orders" className="text-xs text-muted-foreground hover:text-foreground">All orders →</Link>
+          </div>
+          {recent.length === 0 ? <p className="p-6 text-sm text-muted-foreground">No orders yet.</p> : (
+            <ul className="divide-y divide-border">
+              {recent.map((r) => (
+                <li key={r.id}>
+                  <a href={`/admin/orders?o=${r.id}`} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-secondary/50">
+                    <span className="font-mono">{r.order_code}</span>
+                    <span className="flex-1 truncate text-muted-foreground">{r.customer_name}</span>
+                    <span className="font-mono">{formatRwf(r.total_rwf)}</span>
+                    <StatusPill status={r.status} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <section className="rounded-lg border border-border">
+          <div className="border-b border-border px-4 py-3"><h2 className="text-sm font-medium">Stock needing attention</h2></div>
+          {low.length === 0 ? <p className="p-6 text-sm text-muted-foreground">All stocked.</p> : (
+            <ul className="divide-y divide-border">
+              {low.map((p) => (
+                <li key={p.id}>
+                  <Link to="/admin/products/edit/$id" params={{ id: p.id }} className="flex justify-between px-4 py-2.5 text-sm hover:bg-secondary/50">
+                    <span className="truncate">{p.name}</span>
+                    <span className={`font-mono ${p.stock === 0 ? "text-destructive" : "text-amber-600"}`}>{p.stock}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
     </div>
   );

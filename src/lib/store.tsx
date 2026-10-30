@@ -5,7 +5,7 @@ export type CartItem = {
   id: string;
   slug: string;
   name: string;
-  price_usd: number;
+  price_rwf: number;
   image_url: string | null;
   quantity: number;
 };
@@ -14,7 +14,7 @@ export type WishlistItem = {
   id: string;
   slug: string;
   name: string;
-  price_usd: number;
+  price_rwf: number;
   image_url: string | null;
 };
 
@@ -33,7 +33,7 @@ type StoreState = {
   trackView: (id: string) => void;
   cartCount: number;
   wishlistCount: number;
-  subtotalUsd: number;
+  subtotalRwf: number;
 };
 
 const StoreContext = createContext<StoreState | null>(null);
@@ -50,8 +50,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const w = localStorage.getItem("tl_wishlist");
       const rv = localStorage.getItem("tl_recent");
       const cur = localStorage.getItem("tl_currency");
-      if (c) setCart(JSON.parse(c));
-      if (w) setWishlist(JSON.parse(w));
+      if (c) setCart((JSON.parse(c) as CartItem[]).filter((i) => typeof i.price_rwf === "number"));
+      if (w) setWishlist((JSON.parse(w) as WishlistItem[]).filter((i) => typeof i.price_rwf === "number"));
       if (rv) setRecentlyViewed(JSON.parse(rv));
       if (cur) setCurrency(cur as Currency);
       else setCurrency(detectCurrency());
@@ -75,7 +75,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const removeFromCart = (id: string) => setCart((p) => p.filter((i) => i.id !== id));
   const updateQty = (id: string, qty: number) =>
-    setCart((p) => p.map((i) => (i.id === id ? { ...i, quantity: Math.max(1, qty) } : i)));
+    setCart((p) => p.map((i) => (i.id === id ? { ...i, quantity: Math.min(99, Math.max(1, qty)) } : i)));
   const clearCart = () => setCart([]);
 
   const toggleWishlist = (item: WishlistItem) => {
@@ -89,7 +89,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setRecentlyViewed((prev) => [id, ...prev.filter((x) => x !== id)].slice(0, 20));
 
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
-  const subtotalUsd = cart.reduce((s, i) => s + i.price_usd * i.quantity, 0);
+  const subtotalRwf = cart.reduce((s, i) => s + i.price_rwf * i.quantity, 0);
 
   return (
     <StoreContext.Provider
@@ -97,7 +97,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         cart, currency, wishlist, recentlyViewed,
         addToCart, removeFromCart, updateQty, clearCart,
         setCurrency, toggleWishlist, isWishlisted, trackView,
-        cartCount, wishlistCount: wishlist.length, subtotalUsd,
+        cartCount, wishlistCount: wishlist.length, subtotalRwf,
       }}
     >
       {children}
@@ -111,13 +111,16 @@ export function useStore() {
   return ctx;
 }
 
-// Free shipping rule: Kigali orders >= $10 USD
-export function computeShippingUsd(city: string, subtotalUsd: number): number {
-  const isKigali = city.trim().toLowerCase() === "kigali";
-  if (isKigali && subtotalUsd >= 10) return 0;
-  if (isKigali) return 2;
-  return 8;
+/**
+ * Shipping preview — mirrors public.shipping_fee_rwf() in the database,
+ * which is what the order is actually charged. Keep the two in sync.
+ */
+export function shippingFeeRwf(city: string, subtotalRwf: number, pickup = false): number {
+  if (pickup) return 0;
+  if (city.trim().toLowerCase().includes("kigali")) return subtotalRwf >= 15000 ? 0 : 2000;
+  return 8000;
 }
+export const FREE_SHIPPING_KIGALI_RWF = 15000;
 
 /** Categories considered "electronic components" — buttons say "Add to Kit". */
 const COMPONENT_KEYWORDS = [

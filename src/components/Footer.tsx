@@ -1,12 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
-import { LanguageSelector } from "./LanguageSelector";
 
 export function Footer() {
   return (
     <footer className="mt-24 border-t border-border bg-background">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-        <div className="grid gap-10 md:grid-cols-4">
+        <div className="grid gap-10 md:grid-cols-3">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3" data-no-translate>
               <Logo className="size-10" />
@@ -36,12 +35,6 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h4 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Language
-            </h4>
-            <LanguageSelector />
-          </div>
         </div>
 
         <div className="mt-10 flex flex-col-reverse sm:flex-row items-start sm:items-center justify-between gap-4 border-t border-border pt-6">
@@ -49,7 +42,7 @@ export function Footer() {
             © {new Date().getFullYear()} Clab · tieflab · Kigali, Rwanda
           </p>
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Payments: Stripe · MoMo · Bank Transfer · WhatsApp
+            Payments: MTN MoMo · Airtel Money · Cash on delivery
           </p>
         </div>
       </div>

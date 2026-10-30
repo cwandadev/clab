@@ -14,6 +14,7 @@ import {
   Eye
 } from "lucide-react";
 import { listAdminProducts, deleteProduct } from "@/lib/products.functions";
+import { formatRwf } from "@/lib/currency";
 
 export const Route = createFileRoute("/admin/products/")({
   component: AdminProducts,
@@ -29,14 +30,14 @@ function AdminProducts() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedVoltage, setSelectedVoltage] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10_000_000]);
   const [showInStock, setShowInStock] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   const deleteMut = useMutation({
     mutationFn: (id: string) => del({ data: { id } }),
-    onSuccess: () => {
-      toast.success("Product deleted");
+    onSuccess: (r) => {
+      toast.success(r.archived ? "Product has past orders, so it was archived (hidden) instead of deleted" : "Product deleted");
       qc.invalidateQueries({ queryKey: ["admin-products"] });
       qc.invalidateQueries({ queryKey: ["products"] });
     },
@@ -57,7 +58,7 @@ function AdminProducts() {
     const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
     const matchesVoltage = selectedVoltage === "all" || product.voltage_range === selectedVoltage;
     const matchesType = selectedType === "all" || product.product_type === selectedType;
-    const matchesPrice = (product.price_usd || 0) >= priceRange[0] && (product.price_usd || 0) <= priceRange[1];
+    const matchesPrice = (product.price_rwf || 0) >= priceRange[0] && (product.price_rwf || 0) <= priceRange[1];
     const matchesStock = !showInStock || (product.stock || 0) > 0;
     
     return matchesSearch && matchesCategory && matchesVoltage && matchesType && matchesPrice && matchesStock;
@@ -227,7 +228,7 @@ function AdminProducts() {
                     </span>
                   </td>
                   <td className="px-4 py-4 font-mono">
-                    ${Number(p.price_usd || 0).toFixed(2)}
+                    {formatRwf(p.price_rwf)}
                   </td>
                   <td className="px-4 py-4 text-right relative">
                     <button
@@ -277,7 +278,7 @@ function AdminProducts() {
                           </button>
                           <button
                             onClick={() => {
-                              if (confirm(`Delete "${p.name}"? This action cannot be undone.`)) {
+                              if (confirm(`Delete "${p.name}"? Products with past orders are archived instead.`)) {
                                 deleteMut.mutate(p.id);
                                 setActiveMenu(null);
                               }
