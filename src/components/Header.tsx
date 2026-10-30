@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ShoppingCart, User, Heart } from "lucide-react";
+import { ShoppingCart, User, Heart, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
 import { CURRENCIES } from "@/lib/currency";
@@ -8,6 +8,7 @@ import { NotificationBell } from "./NotificationBell";
 import { FREE_SHIPPING_KIGALI_RWF } from "@/lib/store";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import { UserAvatar } from "./UserAvatar";
+import { SearchSheet } from "./SearchSheet";
 
 const BANNER_KEY = "clab.banner.kigali.dismissed";
 
@@ -16,6 +17,7 @@ export function Header() {
   const { user } = useCurrentUser();
   const { setCartOpen } = useStore();
   const [bannerVisible, setBannerVisible] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     const dismissed = localStorage.getItem(BANNER_KEY);
@@ -94,6 +96,10 @@ export function Header() {
               </span>
             )}
           </Link>
+          <button onClick={() => setSearchOpen(true)} aria-label="Search"
+            className="hidden md:inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary">
+            <Search className="size-4" />
+          </button>
           {user && <NotificationBell userId={user.id} />}
           {user ? (
             <Link to="/account" aria-label="Account" title={user.name}
@@ -137,6 +143,7 @@ export function Header() {
           </button>
         </div>
       )}
+      <SearchSheet open={searchOpen} onOpenChange={setSearchOpen} />
     </header>
   );
 }

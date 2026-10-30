@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/lib/useCurrentUser";
 import { UserAvatar } from "./UserAvatar";
 import { SearchSheet } from "./SearchSheet";
 
-const HIDE_ON = [/^\/admin/, /^\/checkout/, /^\/auth/];
+const HIDE_ON = [/^\/admin/, /^\/checkout/, /^\/auth/, /^\/products\//];  // product pages have their own buy bar
 
 /** Phone and small-tablet tab bar. Hides while scrolling down, returns when scrolling up. */
 export function BottomNav() {
