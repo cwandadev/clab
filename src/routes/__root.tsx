@@ -13,6 +13,8 @@ import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { StoreProvider } from "../lib/store";
 import { supabase } from "@/integrations/supabase/client";
+import { BottomNav } from "@/components/BottomNav";
+import { CartSheet } from "@/components/CartSheet";
 
 function ThemeInitializer() {
   useEffect(() => {
@@ -85,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Clab — DIY Electronics, Components & Creative Hardware" },
       {
         name: "description",
@@ -203,7 +205,9 @@ function RootComponent() {
         <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading…</div>}>
           <Outlet />
         </Suspense>
-        <Toaster position="bottom-right" richColors />
+        <BottomNav />
+        <CartSheet />
+        <Toaster position="bottom-right" richColors mobileOffset={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }} />
       </StoreProvider>
     </QueryClientProvider>
   );

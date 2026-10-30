@@ -10,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useStore } from "@/lib/store";
 import { CURRENCIES, formatRwf } from "@/lib/currency";
 import { SupportChat } from "@/components/SupportChat";
+import { UserAvatar } from "@/components/UserAvatar";
+import { resizeImage } from "@/lib/image";
+import { useCurrentUser, PROFILE_UPDATED } from "@/lib/useCurrentUser";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/account")({
@@ -107,6 +110,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 function AccountPage() {
   const [userRole, setUserRole] = useState<"admin" | "user" | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { user: me } = useCurrentUser();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -327,23 +331,13 @@ function AccountPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
-        throw new Error("Only JPEG, PNG, and WebP images are allowed");
-      }
-
-      if (file.size > 2 * 1024 * 1024) {
-        throw new Error("Image must be less than 2MB");
-      }
-
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}/avatar.${fileExt}`;
+      // Square-crop and shrink to 256 px in the browser; a new file name each time so caches never show the old photo.
+      const { blob, ext } = await resizeImage(file, { max: 256, square: true, quality: 0.85 });
+      const filePath = `${user.id}/avatar-${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("profile-pictures")
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
+        .upload(filePath, blob, { contentType: blob.type, cacheControl: "31536000" });
 
       if (uploadError) throw uploadError;
 
@@ -358,6 +352,7 @@ function AccountPage() {
 
       if (updateError) throw updateError;
       setAvatarUrl(publicUrl);
+      window.dispatchEvent(new Event(PROFILE_UPDATED));
       toast.success(t("picture"));
     } catch (err: any) {
       toast.error(err.message || "Failed to upload profile picture");
@@ -900,19 +895,23 @@ function AccountPage() {
           <div className="rounded-lg border border-border bg-card p-6 space-y-4">
             <h2 className="text-lg font-medium">Profile Picture</h2>
             <div className="flex items-center gap-4">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Profile" className="size-20 rounded-full object-cover border border-border" />
-              ) : (
-                <div className="size-20 rounded-full bg-secondary flex items-center justify-center text-2xl font-medium">
-                  {userRole === "admin" ? "A" : "U"}
-                </div>
-              )}
+              <UserAvatar name={me?.name ?? "?"} url={avatarUrl || me?.avatarUrl || null} size={80} />
               <div>
                 <label htmlFor="avatar-upload" className="cursor-pointer inline-flex items-center justify-center rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:opacity-50">
                   {uploading ? "Uploading…" : "Upload Picture"}
                 </label>
-                <input id="avatar-upload" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarUpload} disabled={uploading} className="hidden" />
-                <p className="mt-1 text-xs text-muted-foreground">JPEG, PNG, or WebP. Max 2MB.</p>
+                <input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} className="hidden" />
+                <p className="mt-1 text-xs text-muted-foreground">Any photo — it's cropped square and shrunk for you.</p>
+                {avatarUrl && (
+                  <button type="button" className="mt-1 block text-xs text-muted-foreground underline"
+                    onClick={async () => {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (!user) return;
+                      await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
+                      setAvatarUrl(null);
+                      window.dispatchEvent(new Event(PROFILE_UPDATED));
+                    }}>Remove photo</button>
+                )}
               </div>
             </div>
           </div>
