@@ -88,7 +88,7 @@ function ProductPage() {
         <Link to="/" className="font-mono text-xs uppercase text-muted-foreground hover:text-foreground">
           ← Back to inventory
         </Link>
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-10 lg:gap-12">
           <div>
             <div className="aspect-square rounded-lg bg-secondary outline-1 -outline-offset-1 outline-black/5 grid place-items-center overflow-hidden">
               {gallery[activeImg] ? (
@@ -173,7 +173,7 @@ function ProductPage() {
             <h2 className="mb-6 font-mono text-xs font-medium uppercase tracking-widest text-muted-foreground">
               You may also like
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-px bg-border ring-1 ring-border rounded-lg overflow-hidden">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
               {similar.map((p) => (<ProductCard key={p.id} product={p} />))}
             </div>
           </section>

@@ -34,6 +34,9 @@ type StoreState = {
   cartCount: number;
   wishlistCount: number;
   subtotalRwf: number;
+  /** cart sheet (bottom sheet on phones, side drawer on desktop) */
+  cartOpen: boolean;
+  setCartOpen: (open: boolean) => void;
 };
 
 const StoreContext = createContext<StoreState | null>(null);
@@ -43,6 +46,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
   const [currency, setCurrency] = useState<Currency>("RWF");
+  const [cartOpen, setCartOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -98,6 +102,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         addToCart, removeFromCart, updateQty, clearCart,
         setCurrency, toggleWishlist, isWishlisted, trackView,
         cartCount, wishlistCount: wishlist.length, subtotalRwf,
+        cartOpen, setCartOpen,
       }}
     >
       {children}

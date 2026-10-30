@@ -6,33 +6,16 @@ import { CURRENCIES } from "@/lib/currency";
 import { Logo } from "./Logo";
 import { NotificationBell } from "./NotificationBell";
 import { FREE_SHIPPING_KIGALI_RWF } from "@/lib/store";
-import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUser } from "@/lib/useCurrentUser";
+import { UserAvatar } from "./UserAvatar";
 
 const BANNER_KEY = "clab.banner.kigali.dismissed";
 
 export function Header() {
   const { cartCount, wishlistCount, currency, setCurrency } = useStore();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const { user } = useCurrentUser();
+  const { setCartOpen } = useStore();
   const [bannerVisible, setBannerVisible] = useState(false);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setIsLoggedIn(!!user);
-      setUserId(user?.id ?? null);
-    };
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
-        setIsLoggedIn(!!session?.user);
-        setUserId(session?.user?.id ?? null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   useEffect(() => {
     const dismissed = localStorage.getItem(BANNER_KEY);
@@ -111,14 +94,11 @@ export function Header() {
               </span>
             )}
           </Link>
-          {userId && <NotificationBell userId={userId} />}
-          {isLoggedIn ? (
-            <Link
-              to="/account"
-              className="hidden sm:inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
-              aria-label="Account"
-            >
-              <User className="size-4" />
+          {user && <NotificationBell userId={user.id} />}
+          {user ? (
+            <Link to="/account" aria-label="Account" title={user.name}
+              className="hidden sm:inline-flex size-9 items-center justify-center rounded-full hover:ring-2 hover:ring-border">
+              <UserAvatar name={user.name} url={user.avatarUrl} size={30} />
             </Link>
           ) : (
             <Link
@@ -130,16 +110,17 @@ export function Header() {
               <User className="size-4" />
             </Link>
           )}
-          <Link
-            to="/cart"
-            className="flex items-center gap-2 rounded-md bg-foreground py-2 pl-2 pr-3 text-sm font-medium text-background ring-1 ring-foreground"
+          <button
+            onClick={() => setCartOpen(true)}
+            aria-label={`Cart, ${cartCount} items`}
+            className="hidden md:flex items-center gap-2 rounded-md bg-foreground py-2 pl-2 pr-3 text-sm font-medium text-background ring-1 ring-foreground"
             data-no-translate
           >
             <ShoppingCart className="size-4 shrink-0" />
             <span className="font-mono text-xs" data-no-translate>
               [{String(cartCount).padStart(2, "0")}]
             </span>
-          </Link>
+          </button>
         </div>
       </nav>
       {bannerVisible && (

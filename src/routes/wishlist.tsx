@@ -27,7 +27,7 @@ function WishlistPage() {
             <Link to="/" className="underline">Browse products</Link>.
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-px bg-border ring-1 ring-border rounded-lg overflow-hidden">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
             {wishlist.map((w) => (
               <ProductCard
                 key={w.id}
