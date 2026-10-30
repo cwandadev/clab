@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
@@ -6,6 +6,8 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { Sheet } from "@/components/Sheet";
+import { ProductImage } from "@/components/ProductImage";
+import { useStore } from "@/lib/store";
 import { productsQO, type CatalogProduct } from "@/lib/catalog";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 
@@ -31,8 +33,8 @@ export const Route = createFileRoute("/")({
 });
 
 type Sort = "featured" | "newest" | "price-asc" | "price-desc";
-type Filters = { category: string | null; voltage: string[]; inStock: boolean; sort: Sort };
-const DEFAULT: Filters = { category: null, voltage: [], inStock: false, sort: "featured" };
+type Filters = { category: string | null; voltage: string[]; inStock: boolean; sort: Sort; min: number | null; max: number | null };
+const DEFAULT: Filters = { category: null, voltage: [], inStock: false, sort: "featured", min: null, max: null };
 const SORTS: { id: Sort; label: string }[] = [
   { id: "featured", label: "Featured" }, { id: "newest", label: "Newest" },
   { id: "price-asc", label: "Price: low to high" }, { id: "price-desc", label: "Price: high to low" },
@@ -48,6 +50,7 @@ function applyFilters(products: CatalogProduct[], f: Filters) {
   let list = products.filter((p) =>
     (!f.category || p.category === f.category) &&
     (!f.inStock || p.stock > 0) &&
+    (f.min == null || p.price_rwf >= f.min) && (f.max == null || p.price_rwf <= f.max) &&
     (f.voltage.length === 0 || f.voltage.some((v) => `${p.spec_1 ?? ""} ${p.spec_2 ?? ""}`.includes(v))));
   if (f.sort === "newest") list = [...list].sort((a, b) => b.created_at.localeCompare(a.created_at));
   else if (f.sort === "price-asc") list = [...list].sort((a, b) => a.price_rwf - b.price_rwf);
@@ -76,7 +79,10 @@ function Index() {
   const list = useMemo(() => applyFilters(products, f), [products, f]);
   const visible = list.slice(0, shown);
   const remaining = list.length - visible.length;
-  const activeFilters = f.voltage.length + (f.inStock ? 1 : 0) + (f.sort !== "featured" ? 1 : 0);
+  const activeFilters = f.voltage.length + (f.inStock ? 1 : 0) + (f.sort !== "featured" ? 1 : 0) + (f.min != null || f.max != null ? 1 : 0);
+  const { recentlyViewed } = useStore();
+  const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
+  const recent = recentlyViewed.map((id) => byId.get(id)).filter((p): p is CatalogProduct => !!p).slice(0, 10);
 
   // Restore after Back (Baymard: "Load more" is only OK if Back returns you to the same spot).
   // The router may also reset scroll after mount, so retry for a moment unless the user scrolls first.
@@ -130,6 +136,18 @@ function Index() {
           </label>
         ))}
       </section>
+      <section>
+        <h3 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">Price (RWF)</h3>
+        <div className="flex items-center gap-2">
+          <input type="number" inputMode="numeric" min={0} placeholder="Min" aria-label="Minimum price" value={f.min ?? ""}
+            onChange={(e) => update({ min: e.target.value === "" ? null : Math.max(0, Number(e.target.value)) })}
+            className="w-full rounded-md border border-input bg-background px-2 py-1.5 font-mono text-sm" />
+          <span className="text-muted-foreground">–</span>
+          <input type="number" inputMode="numeric" min={0} placeholder="Max" aria-label="Maximum price" value={f.max ?? ""}
+            onChange={(e) => update({ max: e.target.value === "" ? null : Math.max(0, Number(e.target.value)) })}
+            className="w-full rounded-md border border-input bg-background px-2 py-1.5 font-mono text-sm" />
+        </div>
+      </section>
       <label className="flex cursor-pointer items-center gap-2 text-sm">
         <input type="checkbox" checked={f.inStock} onChange={(e) => update({ inStock: e.target.checked })} className="size-4 rounded" />
         In stock only
@@ -152,6 +170,21 @@ function Index() {
             LEDs, microcontrollers, lab tools, futuristic lighting and acrylic creations — delivered in Kigali.
           </p>
         </header>
+
+        {recent.length > 0 && (
+          <section className="mb-6" aria-label="Recently viewed">
+            <h2 className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Continue browsing</h2>
+            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:-mx-6 sm:px-6">
+              {recent.map((p) => (
+                <Link key={p.id} to="/products/$slug" params={{ slug: p.slug }} title={p.name}
+                  className="flex w-56 shrink-0 items-center gap-2 rounded-lg border border-border p-1.5 pr-3 hover:bg-secondary/60">
+                  <div className="size-11 shrink-0 overflow-hidden rounded-md"><ProductImage src={p.image_url} alt="" category={p.category} sizes="44px" /></div>
+                  <span className="line-clamp-2 text-xs leading-snug">{p.name}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="flex gap-8">
           <aside className="hidden w-56 shrink-0 lg:block">
@@ -181,7 +214,7 @@ function Index() {
 
             <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
               <span>{list.length} {list.length === 1 ? "product" : "products"}</span>
-              {activeFilters > 0 && <button onClick={() => update({ voltage: [], inStock: false, sort: "featured" })} className="underline">Clear filters</button>}
+              {activeFilters > 0 && <button onClick={() => update({ voltage: [], inStock: false, sort: "featured", min: null, max: null })} className="underline">Clear filters</button>}
             </div>
 
             {list.length === 0 ? (

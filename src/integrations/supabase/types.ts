@@ -645,7 +645,14 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      product_ratings: {
+        Row: {
+          average: number | null
+          count: number | null
+          product_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_archive_order: {
@@ -675,6 +682,16 @@ export type Database = {
             needs_reply: boolean
             total: number
           }[] }
+      also_bought: {
+        Args: {
+          _limit?: number
+          _product_id: string
+        }
+        Returns: {
+            product_id: string
+            together: number
+          }[]
+      }
       analytics_overview: {
         Args: {
           _days?: number
@@ -725,6 +742,13 @@ export type Database = {
           }[]
       }
       gen_order_code: { Args: never; Returns: string }
+      has_received_product: {
+        Args: {
+          _product: string
+          _user: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -758,6 +782,25 @@ export type Database = {
           _user: string
         }
         Returns: undefined
+      }
+      product_reviews: {
+        Args: {
+          _product_id: string
+        }
+        Returns: {
+            id: string
+            rating: number
+            comment: string
+            photo_url: string
+            link_url: string
+            upvotes: number
+            downvotes: number
+            created_at: string
+            author: string
+            author_avatar: string
+            is_mine: boolean
+            my_vote: number
+          }[]
       }
       release_expired_reservations: { Args: never; Returns: number }
       release_order_stock: {

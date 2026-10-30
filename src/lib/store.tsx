@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { detectCurrency, type Currency } from "./currency";
 
 export type CartItem = {
@@ -47,6 +47,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
   const [currency, setCurrency] = useState<Currency>("RWF");
   const [cartOpen, setCartOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     try {
@@ -60,12 +61,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (cur) setCurrency(cur as Currency);
       else setCurrency(detectCurrency());
     } catch {}
+    setLoaded(true);
   }, []);
 
-  useEffect(() => { localStorage.setItem("tl_cart", JSON.stringify(cart)); }, [cart]);
-  useEffect(() => { localStorage.setItem("tl_wishlist", JSON.stringify(wishlist)); }, [wishlist]);
-  useEffect(() => { localStorage.setItem("tl_recent", JSON.stringify(recentlyViewed)); }, [recentlyViewed]);
-  useEffect(() => { localStorage.setItem("tl_currency", currency); }, [currency]);
+  // Write only after the saved values were read. Writing the empty start values first could wipe
+  // the saved cart if the provider mounts twice during hydration.
+  useEffect(() => { if (loaded) localStorage.setItem("tl_cart", JSON.stringify(cart)); }, [cart, loaded]);
+  useEffect(() => { if (loaded) localStorage.setItem("tl_wishlist", JSON.stringify(wishlist)); }, [wishlist, loaded]);
+  useEffect(() => { if (loaded) localStorage.setItem("tl_recent", JSON.stringify(recentlyViewed)); }, [recentlyViewed, loaded]);
+  useEffect(() => { if (loaded) localStorage.setItem("tl_currency", currency); }, [currency, loaded]);
 
   const addToCart: StoreState["addToCart"] = (item, qty = 1) => {
     setCart((prev) => {
@@ -89,8 +93,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
   const isWishlisted = (id: string) => wishlist.some((p) => p.id === id);
 
-  const trackView = (id: string) =>
-    setRecentlyViewed((prev) => [id, ...prev.filter((x) => x !== id)].slice(0, 20));
+  // Stable and a no-op when already first: the product page calls this in an effect,
+  // and a new function or array on every call made that effect re-render forever.
+  const trackView = useCallback((id: string) =>
+    setRecentlyViewed((prev) => (prev[0] === id ? prev : [id, ...prev.filter((x) => x !== id)].slice(0, 20))), []);
 
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
   const subtotalRwf = cart.reduce((s, i) => s + i.price_rwf * i.quantity, 0);
