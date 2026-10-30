@@ -1,3 +1,4 @@
+import { InstallAppButton } from "./Pwa";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 
@@ -24,9 +25,9 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <h2 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               Shop
-            </h4>
+            </h2>
             <ul className="mt-4 space-y-2 text-sm">
               <li><Link to="/" className="hover:text-accent">All products</Link></li>
               <li><Link to="/wishlist" className="hover:text-accent">Wishlist</Link></li>
@@ -41,6 +42,7 @@ export function Footer() {
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             © {new Date().getFullYear()} Clab · tieflab · Kigali, Rwanda
           </p>
+          <InstallAppButton />
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             Payments: MTN MoMo · Airtel Money · Cash on delivery
           </p>

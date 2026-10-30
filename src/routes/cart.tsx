@@ -17,7 +17,7 @@ function CartPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+      <main id="main" className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
         <h1 className="text-2xl font-medium tracking-tight">Your Kit</h1>
         {cart.length === 0 ? (
           <div className="mt-12 rounded-lg border border-border p-12 text-center">

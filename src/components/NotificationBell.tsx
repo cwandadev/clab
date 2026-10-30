@@ -64,7 +64,7 @@ export function NotificationBell({ userId }: { userId: string }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+        className="relative inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
         aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
       >
         <Bell className="size-4" />

@@ -83,7 +83,7 @@ function ProductPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto max-w-7xl px-4 pb-32 pt-4 sm:px-6 sm:pt-8 md:pb-16">
+      <main id="main" className="mx-auto max-w-7xl px-4 pb-32 pt-4 sm:px-6 sm:pt-8 md:pb-16">
         <nav aria-label="Breadcrumb" className="mb-4 flex gap-1.5 text-xs text-muted-foreground">
           <Link to="/" className="hover:text-foreground">Shop</Link><span>/</span><span className="truncate">{product.category}</span>
         </nav>
@@ -104,7 +104,7 @@ function ProductPage() {
             <div className="mt-4">{priceBlock}</div>
             {currency !== "RWF" && <p className="mt-1 text-xs text-muted-foreground">Charged as {formatRwf(product.price_rwf)}</p>}
 
-            <p className={`mt-3 text-sm ${soldOut ? "text-destructive" : product.stock <= product.low_stock_threshold ? "text-amber-600" : "text-emerald-600"}`}>
+            <p className={`mt-3 text-sm ${soldOut ? "text-destructive" : product.stock <= product.low_stock_threshold ? "text-amber-700" : "text-emerald-700"}`}>
               {!product.active ? "No longer sold" : soldOut ? "Sold out" : product.stock <= product.low_stock_threshold ? `Only ${product.stock} left` : "In stock"}
             </p>
 

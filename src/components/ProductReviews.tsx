@@ -100,7 +100,7 @@ export function ProductReviews({ productId, productSlug }: { productId: string; 
           {reviews.length > 1 && (
             <div className="mb-3 flex gap-1 text-xs">
               {(["helpful", "newest"] as const).map((s) => (
-                <button key={s} onClick={() => setSort(s)} className={`rounded-full px-3 py-1 ${sort === s ? "bg-foreground text-background" : "bg-secondary"}`}>{s === "helpful" ? "Most helpful" : "Newest"}</button>
+                <button key={s} onClick={() => setSort(s)} className={`h-9 rounded-full px-3.5 ${sort === s ? "bg-foreground text-background" : "bg-secondary"}`}>{s === "helpful" ? "Most helpful" : "Newest"}</button>
               ))}
             </div>
           )}
@@ -110,7 +110,7 @@ export function ProductReviews({ productId, productSlug }: { productId: string; 
                 <div className="flex items-center gap-2">
                   <UserAvatar name={r.author} url={r.author_avatar} size={28} />
                   <span className="text-sm font-medium">{r.author}</span>
-                  <span className="inline-flex items-center gap-0.5 text-[11px] text-emerald-600"><BadgeCheck className="size-3.5" />Verified buyer</span>
+                  <span className="inline-flex items-center gap-0.5 text-[11px] text-emerald-700"><BadgeCheck className="size-3.5" />Verified buyer</span>
                 </div>
                 <div className="mt-1.5 flex items-center gap-2"><Stars value={r.rating} /><span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span></div>
                 {r.comment && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{r.comment}</p>}
@@ -118,8 +118,8 @@ export function ProductReviews({ productId, productSlug }: { productId: string; 
                 {!r.is_mine && (
                   <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
                     <span>Helpful?</span>
-                    <button onClick={() => vote(r.id, r.my_vote, 1)} aria-pressed={r.my_vote === 1} className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${r.my_vote === 1 ? "bg-foreground text-background" : "hover:bg-secondary"}`}><ThumbsUp className="size-3.5" />{r.upvotes}</button>
-                    <button onClick={() => vote(r.id, r.my_vote, -1)} aria-pressed={r.my_vote === -1} className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${r.my_vote === -1 ? "bg-foreground text-background" : "hover:bg-secondary"}`}><ThumbsDown className="size-3.5" />{r.downvotes}</button>
+                    <button onClick={() => vote(r.id, r.my_vote, 1)} aria-pressed={r.my_vote === 1} className={`inline-flex h-9 items-center gap-1 rounded-full px-3 ${r.my_vote === 1 ? "bg-foreground text-background" : "hover:bg-secondary"}`}><ThumbsUp className="size-3.5" />{r.upvotes}</button>
+                    <button onClick={() => vote(r.id, r.my_vote, -1)} aria-pressed={r.my_vote === -1} className={`inline-flex h-9 items-center gap-1 rounded-full px-3 ${r.my_vote === -1 ? "bg-foreground text-background" : "hover:bg-secondary"}`}><ThumbsDown className="size-3.5" />{r.downvotes}</button>
                   </div>
                 )}
               </li>
