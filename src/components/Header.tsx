@@ -1,33 +1,23 @@
 import { Link } from "@tanstack/react-router";
-import { ShoppingCart, User, Heart } from "lucide-react";
+import { ShoppingCart, User, Heart, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
 import { CURRENCIES } from "@/lib/currency";
 import { Logo } from "./Logo";
-import { supabase } from "@/integrations/supabase/client";
+import { NotificationBell } from "./NotificationBell";
+import { FREE_SHIPPING_KIGALI_RWF } from "@/lib/store";
+import { useCurrentUser } from "@/lib/useCurrentUser";
+import { UserAvatar } from "./UserAvatar";
+import { SearchSheet } from "./SearchSheet";
 
 const BANNER_KEY = "clab.banner.kigali.dismissed";
 
 export function Header() {
   const { cartCount, wishlistCount, currency, setCurrency } = useStore();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user } = useCurrentUser();
+  const { setCartOpen } = useStore();
   const [bannerVisible, setBannerVisible] = useState(false);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setIsLoggedIn(!!user);
-    };
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
-        setIsLoggedIn(event === "SIGNED_IN" || event === "USER_UPDATED");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     const dismissed = localStorage.getItem(BANNER_KEY);
@@ -85,7 +75,8 @@ export function Header() {
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value as never)}
-            className="sm:hidden rounded-md bg-secondary px-2 py-1 font-mono text-[10px] ring-1 ring-black/5"
+            aria-label="Display currency"
+            className="sm:hidden h-9 rounded-md bg-secondary px-2 font-mono text-xs ring-1 ring-black/5"
             data-no-translate
           >
             {CURRENCIES.map((c) => (
@@ -96,7 +87,7 @@ export function Header() {
           </select>
           <Link
             to="/wishlist"
-            className="relative hidden sm:inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+            className="relative hidden sm:inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
             aria-label="Wishlist"
           >
             <Heart className="size-4" />
@@ -106,50 +97,54 @@ export function Header() {
               </span>
             )}
           </Link>
-          {isLoggedIn ? (
-            <Link
-              to="/account"
-              className="hidden sm:inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
-              aria-label="Account"
-            >
-              <User className="size-4" />
+          <button onClick={() => setSearchOpen(true)} aria-label="Search"
+            className="hidden md:inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary">
+            <Search className="size-4" />
+          </button>
+          {user && <NotificationBell userId={user.id} />}
+          {user ? (
+            <Link to="/account" aria-label="Account" title={user.name}
+              className="hidden sm:inline-flex size-10 items-center justify-center rounded-full hover:ring-2 hover:ring-border">
+              <UserAvatar name={user.name} url={user.avatarUrl} size={30} />
             </Link>
           ) : (
             <Link
               to="/auth"
               search={{ redirect: "/", code: undefined, error: undefined, error_description: undefined as any }}
-              className="hidden sm:inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+              className="hidden sm:inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
               aria-label="Sign in"
             >
               <User className="size-4" />
             </Link>
           )}
-          <Link
-            to="/cart"
-            className="flex items-center gap-2 rounded-md bg-foreground py-2 pl-2 pr-3 text-sm font-medium text-background ring-1 ring-foreground"
+          <button
+            onClick={() => setCartOpen(true)}
+            aria-label={`Cart, ${cartCount} items`}
+            className="hidden md:flex items-center gap-2 rounded-md bg-foreground py-2 pl-2 pr-3 text-sm font-medium text-background ring-1 ring-foreground"
             data-no-translate
           >
             <ShoppingCart className="size-4 shrink-0" />
             <span className="font-mono text-xs" data-no-translate>
               [{String(cartCount).padStart(2, "0")}]
             </span>
-          </Link>
+          </button>
         </div>
       </nav>
       {bannerVisible && (
         <div className="bg-foreground py-1.5 text-background relative group">
           <p className="text-center font-mono text-[10px] uppercase tracking-widest">
-            Kigali Delivery: Free on all orders exceeding $10 USD
+            Kigali delivery: free from RWF {FREE_SHIPPING_KIGALI_RWF.toLocaleString("en-US")} · Pay with MTN MoMo or Airtel Money
           </p>
           <button
             onClick={() => { localStorage.setItem(BANNER_KEY, "1"); setBannerVisible(false); }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-background/70 hover:text-background"
+            className="absolute right-0 top-1/2 grid size-10 -translate-y-1/2 place-items-center text-background/70 hover:text-background"
             aria-label="Dismiss banner"
           >
             ✕
           </button>
         </div>
       )}
+      <SearchSheet open={searchOpen} onOpenChange={setSearchOpen} />
     </header>
   );
 }

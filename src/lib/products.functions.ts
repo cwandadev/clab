@@ -32,7 +32,8 @@ const productSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().max(2000).optional().nullable(),
   category: z.string().min(1).max(80),
-  price_usd: z.number().nonnegative().max(100000),
+  price_rwf: z.number().int().nonnegative().max(100_000_000),
+  compare_at_price_rwf: z.number().int().nonnegative().max(100_000_000).optional().nullable(),
   stock: z.number().int().nonnegative().max(1000000),
   image_url: z.string().url().max(500).optional().nullable().or(z.literal("")),
   spec_1: z.string().max(80).optional().nullable(),
@@ -100,9 +101,16 @@ export const deleteProduct = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // A product that was ever ordered is archived (hidden), never erased.
+    const { count } = await supabaseAdmin.from("order_items").select("id", { count: "exact", head: true }).eq("product_id", data.id);
+    if ((count ?? 0) > 0) {
+      const { error } = await supabaseAdmin.from("products").update({ active: false }).eq("id", data.id);
+      if (error) throw new Error(error.message);
+      return { ok: true, archived: true };
+    }
     const { error } = await supabaseAdmin.from("products").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true, archived: false };
   });
 
 export const listAdminProducts = createServerFn({ method: "GET" })
@@ -132,24 +140,33 @@ export const listAdminOrders = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+/**
+ * Moves an order forward (processing → shipped → delivered; cash orders may also be marked paid).
+ * Runs through the ADMIN'S OWN client, so the database trigger that locks payment fields applies.
+ * Cancelling goes through adminCancelOrder (it returns stock and starts the refund).
+ */
 export const updateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
-    z
-      .object({
-        id: z.string().uuid(),
-        status: z.enum(["pending", "paid", "shipped", "delivered", "cancelled"]),
-      })
-      .parse(d),
+    z.object({
+      id: z.string().uuid(),
+      status: z.enum(["paid", "processing", "shipped", "delivered"]),
+      tracking_number: z.string().trim().max(80).optional(),
+      carrier: z.string().trim().max(60).optional(),
+    }).parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("orders")
-      .update({ status: data.status })
-      .eq("id", data.id);
-    if (error) throw new Error(error.message);
+    const patch: { status: string; tracking_number?: string; carrier?: string } = { status: data.status };
+    if (data.tracking_number) patch.tracking_number = data.tracking_number;
+    if (data.carrier) patch.carrier = data.carrier;
+    const { error } = await context.supabase.from("orders").update(patch).eq("id", data.id);
+    if (error) {
+      const m = error.message;
+      if (m.includes("PAID_ONLY_BY_PROVIDER")) throw new Error("A mobile money order becomes paid only when pawaPay confirms it. Use “Recheck payment”.");
+      if (m.includes("ORDER_NOT_PAID")) throw new Error("This mobile money order is not paid yet.");
+      throw new Error(m);
+    }
     return { ok: true };
   });
 

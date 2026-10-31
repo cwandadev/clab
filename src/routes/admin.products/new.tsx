@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { upsertProduct } from "@/lib/products.functions";
+import { ImageUploader } from "@/components/ImageUploader";
 
 export const Route = createFileRoute("/admin/products/new")({
   component: NewProduct,
@@ -17,7 +18,7 @@ function NewProduct() {
     name: "",
     description: "",
     category: "Components",
-    price_usd: 0,
+    price_rwf: 0,
     stock: 0,
     image_url: "",
     spec_1: "",
@@ -106,9 +107,9 @@ export function ProductForm({
             <option value="digital_circuit">Component / Kit</option>
           </select>
         </Field>
-        <Field label="Price (USD)">
-          <input required type="number" min={0} step="0.01" value={form.price_usd}
-            onChange={(e) => setForm({ ...form, price_usd: Number(e.target.value) })} className="inp font-mono" />
+        <Field label="Price (RWF, whole francs)">
+          <input required type="number" min={0} step="1" value={form.price_rwf}
+            onChange={(e) => setForm({ ...form, price_rwf: Math.round(Number(e.target.value)) })} className="inp font-mono" />
         </Field>
         <Field label="Stock">
           <input required type="number" min={0} value={form.stock}
@@ -120,19 +121,11 @@ export function ProductForm({
         </Field>
       </div>
 
-      <Field label="Primary image URL">
-        <input type="url" value={form.image_url ?? ""}
-          onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="inp"
-          placeholder="https://..." />
-      </Field>
-      {form.image_url && (
-        <img src={form.image_url} alt="" className="size-32 rounded object-cover ring-1 ring-black/5" />
-      )}
-
-      <Field label="Additional image URLs (one per line)">
-        <textarea value={extraImagesText} onChange={(e) => setExtraImagesText(e.target.value)}
-          rows={4} className="inp font-mono text-xs"
-          placeholder={"https://example.com/img1.jpg\nhttps://example.com/img2.jpg"} />
+      <Field label="Photos">
+        <ImageUploader
+          urls={[form.image_url, ...extraImagesText.split("\n")].map((x: string) => (x ?? "").trim()).filter(Boolean)}
+          onChange={(urls) => { setForm({ ...form, image_url: urls[0] ?? "" }); setExtraImagesText(urls.slice(1).join("\n")); }}
+        />
       </Field>
 
       <div className="grid grid-cols-2 gap-4">

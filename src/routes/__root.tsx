@@ -13,6 +13,9 @@ import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { StoreProvider } from "../lib/store";
 import { supabase } from "@/integrations/supabase/client";
+import { BottomNav } from "@/components/BottomNav";
+import { PwaManager } from "@/components/Pwa";
+import { CartSheet } from "@/components/CartSheet";
 
 function ThemeInitializer() {
   useEffect(() => {
@@ -48,7 +51,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
   const router = useRouter();
 
@@ -85,7 +88,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#fafafa" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "Clab" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { title: "Clab — DIY Electronics, Components & Creative Hardware" },
       {
         name: "description",
@@ -113,7 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "icon",
         type: "image/svg+xml",
-        href: "/clab.svg",
+        href: "/clab-light.svg",
       },
       // PNG fallbacks for different sizes
       {
@@ -140,6 +148,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         sizes: "512x512",
         href: "/favicon-512x512.png",
       },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       // Apple touch icon
       {
         rel: "apple-touch-icon",
@@ -200,10 +209,18 @@ function RootComponent() {
       <StoreProvider>
         <AuthSubscriber />
         <ThemeInitializer />
+        <a href="#main"
+          onClick={(e) => { e.preventDefault(); const m = document.querySelector("main"); if (m) { m.setAttribute("tabindex", "-1"); m.focus(); } }}
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-md focus:bg-foreground focus:px-4 focus:py-2 focus:text-background">
+          Skip to content
+        </a>
         <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading…</div>}>
           <Outlet />
         </Suspense>
-        <Toaster position="bottom-right" richColors />
+        <PwaManager />
+        <BottomNav />
+        <CartSheet />
+        <Toaster position="bottom-right" richColors mobileOffset={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }} />
       </StoreProvider>
     </QueryClientProvider>
   );

@@ -8,9 +8,6 @@ import {
   BarChart3, 
   MessageSquare,
   LayoutDashboard,
-  Palette,
-  Video,
-  Sparkles,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -136,8 +133,23 @@ export function AdminSidebar() {
     localStorage.setItem("admin-sidebar-collapsed", String(newState));
   };
 
-  const pendingOrdersCount = 3;
-  const unreadChatsCount = 5;
+  // Real counts from the database (analytics_overview), refreshed every 30 s
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const [unreadChatsCount, setUnreadChatsCount] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      const { data } = await supabase.rpc("analytics_overview", { _days: 1 });
+      const action = (data as { action?: Record<string, number> } | null)?.action;
+      if (alive && action) {
+        setPendingOrdersCount((action.to_dispatch ?? 0) + (action.refunds_pending ?? 0));
+        setUnreadChatsCount(action.chats_waiting ?? 0);
+      }
+    };
+    load();
+    const t = setInterval(load, 30000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
 
   const getInitials = () => {
     if (!userProfile) return "U";
@@ -225,13 +237,6 @@ export function AdminSidebar() {
             collapsed={collapsed}
           />
           <AdminNavLink 
-            to="/admin/motifs" 
-            label="Motifs" 
-            icon={<Palette className="w-4 h-4" />}
-            activeIcon={<Palette className="w-4 h-4 fill-current" />}
-            collapsed={collapsed}
-          />
-          <AdminNavLink 
             to="/admin/analytics" 
             label="Analytics" 
             icon={<BarChart3 className="w-4 h-4" />}
@@ -271,20 +276,6 @@ export function AdminSidebar() {
             icon={<MessageSquare className="w-4 h-4" />}
             activeIcon={<MessageSquare className="w-4 h-4 fill-current" />}
             badge={unreadChatsCount}
-            collapsed={collapsed}
-          />
-          <AdminNavLink 
-            to="/admin/tutorials" 
-            label="Tutorials" 
-            icon={<Video className="w-4 h-4" />}
-            activeIcon={<Video className="w-4 h-4 fill-current" />}
-            collapsed={collapsed}
-          />
-          <AdminNavLink 
-            to="/admin/ai" 
-            label="AI Assistant" 
-            icon={<Sparkles className="w-4 h-4" />}
-            activeIcon={<Sparkles className="w-4 h-4 fill-current" />}
             collapsed={collapsed}
           />
           <AdminNavLink 
