@@ -35,7 +35,7 @@ async function startRefund(orderId: string, depositId: string, amountRwf: number
 
 export const adminCancelOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ order_id: z.string().uuid(), reason: z.string().trim().max(300) }).parse(d))
+  .validator((d: unknown) => z.object({ order_id: z.string().uuid(), reason: z.string().trim().max(300) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { data: rows, error } = await context.supabase.rpc("admin_cancel_order", { _order_id: data.order_id, _reason: data.reason });
@@ -47,7 +47,7 @@ export const adminCancelOrder = createServerFn({ method: "POST" })
 
 export const adminRetryRefund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ order_id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ order_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -62,7 +62,7 @@ export const adminRetryRefund = createServerFn({ method: "POST" })
 /** Ask pawaPay about every deposit and refund of an order, and apply what it says. */
 export const adminRecheckPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ order_id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ order_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -103,7 +103,7 @@ export const adminRecheckPayment = createServerFn({ method: "POST" })
 
 export const adminArchiveOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ order_id: z.string().uuid(), archive: z.boolean() }).parse(d))
+  .validator((d: unknown) => z.object({ order_id: z.string().uuid(), archive: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.rpc("admin_archive_order", { _order_id: data.order_id, _archive: data.archive });
     if (error) throw new Error(error.message.includes("ORDER_NOT_ARCHIVABLE")

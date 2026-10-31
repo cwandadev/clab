@@ -14,7 +14,7 @@ export const listProducts = createServerFn({ method: "GET" }).handler(async () =
 });
 
 export const getProductBySlug = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ slug: z.string().min(1).max(120) }).parse(d))
+  .validator((d) => z.object({ slug: z.string().min(1).max(120) }).parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
@@ -58,7 +58,7 @@ async function assertAdmin(supabase: any, userId: string) {
 
 export const upsertProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => productSchema.parse(d))
+  .validator((d) => productSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -83,7 +83,7 @@ export const upsertProduct = createServerFn({ method: "POST" })
   });
 
 export const getProductImages = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ product_id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ product_id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
@@ -97,7 +97,7 @@ export const getProductImages = createServerFn({ method: "GET" })
 
 export const deleteProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -147,7 +147,7 @@ export const listAdminOrders = createServerFn({ method: "GET" })
  */
 export const updateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({
       id: z.string().uuid(),
       status: z.enum(["paid", "processing", "shipped", "delivered"]),

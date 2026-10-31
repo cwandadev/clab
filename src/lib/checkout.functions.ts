@@ -50,7 +50,7 @@ const placeOrderSchema = z.object({
 
 export const placeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => placeOrderSchema.parse(d))
+  .validator((d: unknown) => placeOrderSchema.parse(d))
   .handler(async ({ data, context }) => {
     if (!data.pickup && data.customer.address.length < 3) throw new Error("Please enter a delivery address.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -71,7 +71,7 @@ export const placeOrder = createServerFn({ method: "POST" })
 
 export const predictPayerPhone = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ phone: z.string().trim().min(6).max(20) }).parse(d))
+  .validator((d: unknown) => z.object({ phone: z.string().trim().min(6).max(20) }).parse(d))
   .handler(async ({ data }) => {
     const { predictProvider, customerMessageFor } = await import("./pawapay.server");
     try {
@@ -83,7 +83,7 @@ export const predictPayerPhone = createServerFn({ method: "POST" })
 
 export const startMomoPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       order_id: z.string().uuid(),
       phone: z.string().trim().min(6).max(20),
@@ -138,7 +138,7 @@ export const startMomoPayment = createServerFn({ method: "POST" })
 /** Polled by the order page. Asks pawaPay directly, so a lost callback changes nothing. */
 export const checkPaymentStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ order_id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ order_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const pp = await import("./pawapay.server");
@@ -180,7 +180,7 @@ export const checkPaymentStatus = createServerFn({ method: "POST" })
 
 export const cancelMyOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ order_id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ order_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.rpc("cancel_my_unpaid_order", { _order_id: data.order_id });
     if (error) throw new Error(friendlyDbError(error.message));
@@ -189,7 +189,7 @@ export const cancelMyOrder = createServerFn({ method: "POST" })
 
 export const hideMyOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ order_id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ order_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.rpc("hide_my_order", { _order_id: data.order_id });
     if (error) throw new Error(friendlyDbError(error.message));
